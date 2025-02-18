@@ -24,3 +24,4 @@ ALGORITHM=HS256
 ```bash
 python main.py
 ```
+### Гала когда начнешь фронт делать можешь посомтреть http://localhost:8000/docs тут все есть

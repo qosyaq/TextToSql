@@ -1,0 +1,47 @@
+# Виртуальное окружение
+venv/
+env/
+
+# Кеш Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Логи и отладочные файлы
+*.log
+logs/
+debug.log
+
+# Конфигурационные файлы IDE
+.vscode/
+.idea/
+*.iml
+
+# Файлы зависимостей
+Pipfile
+Pipfile.lock
+poetry.lock
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# База данных SQLite
+*.sqlite3
+*.db
+
+# Файлы окружения
+.env
+*.env
+.env.local
+
+# Docker и контейнеры
+docker-compose.override.yml
+
+# Кэш и временные файлы
+*.swp
+*.swo
+*.bak
+*.tmp
+.DS_Store
+Thumbs.db

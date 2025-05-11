@@ -1,0 +1,15 @@
+fastapi
+uvicorn
+sqlalchemy
+aiosqlite
+httpie
+pyjwt
+starlette
+g4f==0.3.3.3
+typing
+bcrypt
+python-dotenv
+asyncpg
+pydantic
+pinecone
+sqlglot

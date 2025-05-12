@@ -40,7 +40,7 @@ export default function ProtectedRoute() {
         return (
             <Navigate
                 to="/user/login"
-                state={{ from: location, error: "Сначала войдите!" }}
+                state={{ from: location, message: "Сначала войдите!", type: "error" }}
                 replace
             />
         );

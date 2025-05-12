@@ -109,5 +109,15 @@ async def delete(password: Password, token: str) -> dict:
 
 
 async def checkme(token):
-    UserModel = await verify_token(token)
-    return {"detail": f"Hello! {UserModel.email}"}
+    user_model = await verify_token(token)
+    return {"detail": f"Hello! {user_model.email}"}
+
+
+async def get_profile(token: str) -> dict:
+    user_model: UserOrm = await verify_token(token)
+    return {
+        "id": user_model.id,
+        "email": user_model.email,
+        "created_at": user_model.created_at,
+    }
+

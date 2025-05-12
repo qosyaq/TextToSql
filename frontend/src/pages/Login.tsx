@@ -30,13 +30,12 @@ export default function Login() {
     }, [notification]);
 
     useEffect(() => {
-        if (location.state?.error) {
-            setNotification({ type: "error", message: location.state.error });
+        if (location.state?.message) {
+            setNotification({ type: location.state.type || "success", message: location.state.message });
 
-            // очищаем состояние (через replace с текущим path)
             navigate(location.pathname, { replace: true });
         }
-    }, [location.state, navigate])
+    }, [location.state, navigate]);
 
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -90,7 +89,7 @@ export default function Login() {
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -20 }}
                             transition={{ duration: 0.4, ease: "easeInOut" }}
-                            className={`absolute -top-20 left-1/2 -translate-x-1/2 px-4 py-2 rounded-md text-white text-sm shadow-lg ${notification.type === "success" ? "bg-green-600" : "bg-red-600"
+                            className={`absolute -top-18 left-1/2 -translate-x-1/2 px-4 py-2 rounded-md text-white text-sm shadow-lg ${notification.type === "success" ? "bg-green-600" : "bg-red-600"
                                 }`}
                         >
                             {notification.message}

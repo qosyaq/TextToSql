@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import { Database } from "lucide-react";
+import { DatabaseZap } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function Databases() {
@@ -102,8 +102,8 @@ export default function Databases() {
             <main className="flex-grow flex flex-col items-center justify-center text-center bg-gradient-to-b from-purple-800 to-gray-900 text-white p-6 relative">
                 <h1 className="text-4xl font-bold mb-10 flex items-center gap-2 text-purple-100 drop-shadow-lg tracking-wide">
                     Ваши базы данных
-                    <Database
-                        className="ml-1 w-14 h-14 text-purple-100 transition-all duration-300 ease-in-out transform hover:scale-102 hover:text-lime-300 hover:drop-shadow-lg"
+                    <DatabaseZap
+                        className="ml-1 w-14 h-14 text-purple-300 transition-all duration-300 ease-in-out transform hover:scale-102 hover:text-purple-200 hover:drop-shadow-lg"
                     />
 
                 </h1>
@@ -116,7 +116,7 @@ export default function Databases() {
                         <ul className="space-y-4 mb-6">
                             {displayedDatabases.map((db) => (
                                 <li key={db.db_name}
-                                    className="bg-white/10 backdrop-blur border border-white/20 text-white px-6 py-3 rounded-lg shadow-md text-lg font-semibold cursor-pointer hover:bg-white/20 transition-all"
+                                    className="bg-white/5 backdrop-blur border border-white/13 text-white px-6 py-3 rounded-lg shadow-md text-lg font-semibold cursor-pointer hover:bg-white/10 transition-all"
                                     onClick={() => enterDB(db.db_name)}>
                                     {db.db_name}
                                 </li>
@@ -230,7 +230,7 @@ export default function Databases() {
                                             onClick={() => {
                                                 window.location.href = `/database/${db.db_name}/chat`;
                                             }}
-                                            className="p-2 border border-white/40 rounded-md cursor-pointer hover:bg-white/10 transition-all"
+                                            className="p-2 border border-white/40 bg-purple-400/10 rounded-md cursor-pointer hover:bg-purple-400/5 transition-all"
                                         >
                                             {db.db_name}
                                         </div>

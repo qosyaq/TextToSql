@@ -10,6 +10,7 @@ import "./index.css";
 import ProtectedRoute from "./components/ProtectedRoute.tsx";
 import NotFound from "./pages/NotFound";
 import Chat from "./pages/Chat";
+import Profile from "./pages/Profile.tsx";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
@@ -23,6 +24,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
           <Route path="/databases" element={<Database />} />
           <Route path="/database/:db_name/tables" element={<TablesPage />} />
           <Route path="/database/:db_name/chat" element={<Chat />} />
+          <Route path="/user/profile" element={<Profile />} />
         </Route>
 
         {/* Другие маршруты */}

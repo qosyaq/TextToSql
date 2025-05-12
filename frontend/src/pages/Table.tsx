@@ -316,6 +316,7 @@ export default function TablesPage() {
             <Header />
 
             <main className="bg-gradient-to-b from-purple-800 to-gray-900 flex-grow text-white p-6 flex flex-col items-center">
+
                 <div className="flex items-center flex-wrap gap-4 mb-8 justify-between">
                     <h1 className="text-3xl md:text-4xl font-bold text-purple-100 tracking-wide drop-shadow-md">
                         Таблицы в{" "}
@@ -327,7 +328,7 @@ export default function TablesPage() {
                     <div className="flex gap-3">
                         <Link
                             to={`/database/${db_name}/chat`}
-                            className="p-3 rounded-full bg-gradient-to-br from-green-600 to-blue-700 text-white hover:bg-white hover:text-green-200 hover:scale-101 shadow-lg transition-all duration-300 hover:opacity-80"
+                            className="p-3 rounded-full bg-gradient-to-br from-green-600 to-blue-400 text-white hover:bg-white hover:text-green-200 hover:scale-101 shadow-lg transition-all duration-300 hover:opacity-80"
                             title="Перейти в чат"
                         >
                             <MessageCircleCode size={26} />
@@ -335,7 +336,7 @@ export default function TablesPage() {
 
                         <button
                             onClick={() => setIsConfirmModalOpen(true)}
-                            className="p-3 rounded-full bg-gradient-to-br from-orange-500 to-red-700 text-white hover:bg-white hover:text-red-200 shadow-lg hover:scale-101  transition-all duration-300 cursor-pointer hover:opacity-80"
+                            className="p-3 rounded-full bg-gradient-to-br from-orange-500 to-red-400 text-white hover:bg-white hover:text-red-200 shadow-lg hover:scale-101  transition-all duration-300 cursor-pointer hover:opacity-80"
                             title="Удалить базу данных"
                         >
                             <Trash2 size={26} />
@@ -352,7 +353,7 @@ export default function TablesPage() {
                             {!showInput ? (
                                 <button
                                     onClick={() => setShowInput(true)}
-                                    className="bg-gradient-to-br from-blue-500 to-purple-700 text-white px-4 py-2 rounded-lg hover:bg-white/80 hover:text-purple-100 transition text-2xl font-bold hover:scale-103 cursor-pointer"
+                                    className="bg-gradient-to-br from-purple-500 to-blue-300  text-purple-900 px-4 py-2 rounded-lg transition-all text-2xl font-bold hover:scale-103 hover:text-purple-900/85 cursor-pointer"
                                 >
                                     Создать
                                 </button>
@@ -382,14 +383,14 @@ export default function TablesPage() {
                             {displayedTables.map((table) => (
                                 <li
                                     key={table.table_name}
-                                    className="bg-white/10 backdrop-blur p-4 rounded-md text-white shadow-2xl border border-white/20 italic flex justify-between items-center transition-all hover:scale-102 hover:bg-white/20"
+                                    className="bg-white/5 backdrop-blur p-4 rounded-md text-white shadow-2xl border border-white/13 italic flex justify-between items-center transition-all hover:scale-102 hover:bg-white/10"
                                 >
                                     <span className="font-semibold text-lg">{table.table_name}</span>
                                     <div className="flex gap-4">
                                         <motion.div whileHover={{ rotate: 60 }} className="cursor-pointer" onClick={() => fetchColumns(table.table_name)}>
                                             <Settings size={24} />
                                         </motion.div>
-                                        <motion.div whileHover={{ scale: 1.1 }} className="cursor-pointer text-red-400 hover:text-red-300" onClick={() => deleteTable(table.table_name)}>
+                                        <motion.div whileHover={{ scale: 1.1 }} className="cursor-pointer text-red-400 hover:text-red-400/80" onClick={() => deleteTable(table.table_name)}>
                                             <Trash2 size={24} />
                                         </motion.div>
                                     </div>
@@ -398,7 +399,7 @@ export default function TablesPage() {
 
 
                             {/* Кнопка добавления таблицы */}
-                            <li className="bg-white/10 backdrop-blur p-4 rounded-md text-white shadow-2xl border border-white/20 flex justify-center items-center transition-all hover:scale-102 hover:bg-white/20">
+                            <li className="bg-white/5 backdrop-blur p-4 rounded-md text-white shadow-2xl border border-white/13 flex justify-center items-center transition-all hover:scale-102 hover:bg-white/10">
                                 {!showInput ? (
                                     // Когда showInput = false, показываем только кнопку "+"
                                     <button
@@ -424,7 +425,7 @@ export default function TablesPage() {
                                         />
                                         <button
                                             onClick={addTable}
-                                            className="text-green-400 hover:text-green-300 transition"
+                                            className="text-green-400 hover:text-green-300 transition cursor-pointer"
                                         >
                                             <CirclePlus size={29} />
                                         </button>
@@ -470,16 +471,16 @@ export default function TablesPage() {
                         <div className="text-white border border-white/30 p-4 rounded-lg shadow-lg w-85">
                             <h2 className="text-xl font-bold mb-3 text-center">Удалить базу данных?</h2>
                             <p className="text-center text-gray-300 mb-8 italic">Это действие необратимо.</p>
-                            <div className="flex justify-between">
+                            <div className="flex justify-between gap-x-8">
                                 <button
                                     onClick={() => setIsConfirmModalOpen(false)}
-                                    className="bg-gradient-to-br from-purple-600 to-blue-400 px-10 py-2 rounded transition-all hover:text-purple-100 hover:opacity-80 hover:scale-101 cursor-pointer"
+                                    className="w-full border border-white/30 bg-gray-400/5 hover:bg-gray-400/10 transition text-white py-2 px-4 rounded-md cursor-pointer"
                                 >
                                     Отмена
                                 </button>
                                 <button
                                     onClick={confirmDeleteDatabase}
-                                    className="bg-gradient-to-br from-red-500 to-red-700 text-white px-10 py-2 rounded transition-all hover:text-red-100 hover:scale-101 hover:opacity-80 cursor-pointer"
+                                    className="w-full border border-red-500/60 bg-red-600/5 hover:bg-red-600/10 transition text-red-500 py-2 px-4 rounded-md cursor-pointer"
                                 >
                                     Удалить
                                 </button>
@@ -528,7 +529,7 @@ export default function TablesPage() {
                                 </select>
                                 <button
                                     onClick={addColumn}
-                                    className="w-full bg-gradient-to-br from-blue-400 to-purple-700 hover:scale-101 transition-al text-white px-4 py-2 rounded-md hover:bg-gray-800 hover:text-purple-100 cursor-pointer"
+                                    className="w-full bg-gradient-to-br from-purple-500 to-blue-300 text-purple-100 hover:scale-101 transition-al px-4 py-2 rounded-md hover:bg-gray-800 hover:text-purple-50 cursor-pointer"
                                 >
                                     Добавить
                                 </button>
@@ -581,7 +582,7 @@ export default function TablesPage() {
                                         </select>
                                         <button
                                             onClick={addColumn}
-                                            className="w-full bg-gradient-to-br from-blue-400 to-purple-700 hover:scale-101 transition-all text-white hover:text-purple-100 px-4 py-2 rounded-md hover:bg-gray-800 cursor-pointer"
+                                            className="w-full bg-gradient-to-br from-purple-500 to-blue-300 text-purple-100 hover:scale-101 transition-all hover:text-purple-50 px-4 py-2 rounded-md hover:bg-gray-800 cursor-pointer"
                                         >
                                             Добавить
                                         </button>

@@ -31,3 +31,9 @@ async def delete(password: Password, token: str = Depends(oauth2schema)) -> dict
 async def me(token: str = Depends(oauth2schema)) -> dict:
     result = await user_service.checkme(token)
     return result
+
+
+@router.get("/profile", status_code=status.HTTP_200_OK)
+async def get_profile(token: str = Depends(oauth2schema)) -> dict:
+    profile = await user_service.get_profile(token)
+    return profile

@@ -46,17 +46,29 @@ async def validate_sql_syntax(sql_query: str, dialect: str) -> bool:
         return False
 
 
-async def save_sql_to_pinecone(natural_query: str, sql_query: str, schema: dict):
-    if not schema or not schema.get("tables"):
-        schema_string = "NO_SCHEMA"
-    else:
-        schema_string = "\n".join(
-            f"{table}: " + ", ".join(
-                f"{list(col.keys())[0]} ({list(col.values())[0]})"
-                for col in columns
-            )
-            for table, columns in schema["tables"].items()
+def normalize_schema(schema: dict) -> str:
+    if not schema or "tables" not in schema:
+        return "NO_SCHEMA"
+
+    normalized_tables = []
+
+    for table_name in sorted(schema["tables"]):
+        columns = schema["tables"][table_name]
+
+        sorted_columns = sorted(
+            [(list(col.keys())[0].strip().lower(), list(col.values())[0].strip().lower()) for col in columns],
+            key=lambda x: x[0]
         )
+
+        columns_str = ", ".join(f"{col_name.upper()} ({col_type.upper()})" for col_name, col_type in sorted_columns)
+
+        normalized_tables.append(f"{table_name.strip().lower()} : {columns_str}")
+
+    return "\n".join(normalized_tables)
+
+
+async def save_sql_to_pinecone(natural_query: str, sql_query: str, schema: dict):
+    schema_string = normalize_schema(schema)
 
     combined_text = f"Query: {natural_query}\nSchema:\n{schema_string}"
 
@@ -71,18 +83,9 @@ async def save_sql_to_pinecone(natural_query: str, sql_query: str, schema: dict)
 
 
 async def find_sql_in_pinecone(natural_query: str, schema: dict, top_k=5) -> str | None:
-    if not schema or not schema.get("tables"):
-        schema_str = "NO_SCHEMA"
-    else:
-        schema_str = "\n".join(
-            f"{table}: " + ", ".join(
-                f"{list(col.keys())[0]} ({list(col.values())[0]})"
-                for col in columns
-            )
-            for table, columns in schema["tables"].items()
-        )
+    schema_string = normalize_schema(schema)
 
-    combined_text = f"Query: {natural_query}\nSchema:\n{schema_str}"
+    combined_text = f"Query: {natural_query}\nSchema:\n{schema_string}"
 
     response = index.search(
         namespace="sql-namespace",
@@ -109,7 +112,8 @@ async def find_sql_in_pinecone(natural_query: str, schema: dict, top_k=5) -> str
         best_sql = best_hit["fields"]["sql"]
         best_score = best_hit["_score"]
 
-        if best_score < 0.9:
+        if best_score < 0.90:
+            print(best_score)
             return None
 
         print(f"Найден лучший SQL (score: {best_score}) → {best_sql}")

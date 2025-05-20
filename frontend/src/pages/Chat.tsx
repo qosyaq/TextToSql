@@ -15,6 +15,8 @@ export default function Chat() {
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 2;
     const totalPages = Math.ceil(history.length / itemsPerPage);
+    const [isLoading, setIsLoading] = useState(false);
+    const [isClearing, setIsClearing] = useState(false);
 
     const [copied, setCopied] = useState(false);
 
@@ -66,6 +68,7 @@ export default function Chat() {
 
     const handleTranslate = async () => {
         try {
+            setIsLoading(true);
             const token = localStorage.getItem("token");
             const res = await fetch(`http://localhost:8000/database/${db_name}/chat`, {
                 method: "POST",
@@ -94,10 +97,14 @@ export default function Chat() {
             addNotification("error", `Ошибка выполнения запроса: ${error}`);
 
         }
+        finally {
+            setIsLoading(false);
+        }
     };
 
     const handleClearHistory = async () => {
         try {
+            setIsClearing(true);
             const token = localStorage.getItem("token");
             await fetch(`http://localhost:8000/database/${db_name}/chat`, {
                 method: "DELETE",
@@ -111,6 +118,8 @@ export default function Chat() {
             addNotification("success", "История успешно очищена!");
         } catch (error) {
             addNotification("error", `Ошибка очистки истории: ${error}`);
+        } finally {
+            setIsClearing(false);
         }
     };
 
@@ -148,11 +157,36 @@ export default function Chat() {
                             <div className="flex justify-center">
                                 <button
                                     onClick={handleTranslate}
-                                    className="mt-4 flex items-center justify-center gap-2 px-6 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-xl hover:from-blue-700 hover:to-purple-900 transition-all duration-300"
+                                    disabled={isLoading}
+                                    className={`mt-4 flex items-center justify-center gap-2 px-6 py-2 rounded-xl 
+        ${isLoading ? "bg-gradient-to-r from-blue-500 to-purple-600 cursor-not-allowed opacity-70" : "bg-gradient-to-r from-blue-500 to-purple-600"} 
+        text-white shadow-xl hover:from-blue-700 hover:to-purple-900 transition-all duration-300 cursor-pointer`}
                                 >
-                                    <ArrowLeftRight size={24} className="drop-shadow-sm" />
-                                    <span className="font-medium tracking-wide cursor-pointer">Сгенерировать</span>
+                                    {isLoading ? (
+                                        <svg className="animate-spin h-5 w-5 text-white" viewBox="0 0 24 24">
+                                            <circle
+                                                className="opacity-25"
+                                                cx="12"
+                                                cy="12"
+                                                r="10"
+                                                stroke="currentColor"
+                                                strokeWidth="4"
+                                                fill="none"
+                                            />
+                                            <path
+                                                className="opacity-75"
+                                                fill="currentColor"
+                                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                                            />
+                                        </svg>
+                                    ) : (
+                                        <>
+                                            <ArrowLeftRight size={24} className="drop-shadow-sm" />
+                                            <span className="font-medium tracking-wide cursor-pointer">Сгенерировать</span>
+                                        </>
+                                    )}
                                 </button>
+
                             </div>
                         </div>
 
@@ -206,10 +240,21 @@ export default function Chat() {
                                 </div>
                                 <button
                                     onClick={handleClearHistory}
-                                    className="flex items-center space-x-2 px-4 py-2 rounded-md border border-white/30 text-white hover:bg-gray-900 hover:shadow-lg transition cursor-pointer"
+                                    disabled={isClearing}
+                                    className="flex items-center space-x-2 px-4 py-2 rounded-md border border-white/30 text-white 
+        hover:bg-gray-900 hover:shadow-lg transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    <Trash2 size={18} />
-                                    <span className="text-sm">Очистить</span>
+                                    {isClearing ? (
+                                        <svg className="animate-spin h-4 w-4 text-white" viewBox="0 0 24 24">
+                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                        </svg>
+                                    ) : (
+                                        <>
+                                            <Trash2 size={18} />
+                                            <span className="text-sm">Очистить</span>
+                                        </>
+                                    )}
                                 </button>
                             </div>
 

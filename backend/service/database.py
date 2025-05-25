@@ -68,3 +68,13 @@ async def delete(token: str, db_name: str) -> dict:
         await session.delete(db_model)
         await session.commit()
     return {"detail": "Database deleted successful!"}
+
+
+async def get_db_model(token: str, db_name: str) -> DatabaseOrm | None:
+    user_model: UserOrm = await user.verify_token(token)
+    user_id = user_model.id
+    async with new_session() as session:
+        result = await session.execute(
+            select(DatabaseOrm).where(DatabaseOrm.user_id == user_id, DatabaseOrm.db_name == db_name)
+        )
+        return result.scalars().first()

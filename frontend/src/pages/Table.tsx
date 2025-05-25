@@ -85,11 +85,7 @@ export default function TablesPage() {
         }
     };
 
-    // ====================== FETCH COLUMNS (CORE FIX) ======================
-    /**
-     * Когда пользователь кликает на таблицу, мы делаем запрос на список колонок
-     * и сохраняем результат в `selectedTable`.
-     */
+    // ====================== FETCH COLUMNS ======================
     const fetchColumns = async (tableName: string) => {
         if (!token || !db_name) return;
         try {
@@ -100,10 +96,8 @@ export default function TablesPage() {
                 }
             );
             if (response.ok) {
-                // Предположим, сервер возвращает массив вида [{column_name, column_type}, ...]
                 const columnsData: Column[] = await response.json();
 
-                // Находим таблицу
                 const tableObj: Table = {
                     table_name: tableName,
                     columns: columnsData || [],
@@ -144,7 +138,7 @@ export default function TablesPage() {
             const data = await response.json();
 
             if (response.ok) {
-                // Добавляем новую таблицу (пустой список колонок)
+                // Добавляем новую таблицу
                 setTables([...tables, { table_name: newTable, columns: [] }]);
                 setNewTable("");
                 setShowInput(false);
@@ -219,7 +213,6 @@ export default function TablesPage() {
             const data = await response.json();
 
             if (response.ok) {
-                // Локально добавляем
                 const updatedColumns = [
                     ...selectedTable.columns,
                     { column_name: newColumn, column_type: columnType },
@@ -229,7 +222,6 @@ export default function TablesPage() {
                     columns: updatedColumns,
                 });
 
-                // Также обновим основной массив tables
                 setTables((prev) =>
                     prev.map((t) =>
                         t.table_name === selectedTable.table_name
@@ -270,12 +262,10 @@ export default function TablesPage() {
                 const updatedColumns = selectedTable.columns.filter(
                     (c) => c.column_name !== columnName
                 );
-                // Обновляем локальное selectedTable
                 setSelectedTable({
                     ...selectedTable,
                     columns: updatedColumns,
                 });
-                // Обновляем общий список tables
                 setTables((prev) =>
                     prev.map((t) =>
                         t.table_name === selectedTable.table_name
@@ -411,9 +401,9 @@ export default function TablesPage() {
                                 ) : (
                                     // Когда showInput = true, плавно показываем инпут и кнопку "+"
                                     <motion.div
-                                        initial={{ opacity: 0, scale: 0.8 }} // Исходное состояние (скрыто и уменьшено)
-                                        animate={{ opacity: 1, scale: 1 }} // Анимация появления
-                                        transition={{ duration: 0.3, ease: "easeOut" }} // Плавный переход
+                                        initial={{ opacity: 0, scale: 0.8 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        transition={{ duration: 0.3, ease: "easeOut" }}
                                         className="flex items-center gap-2 w-full"
                                     >
                                         <input
@@ -506,7 +496,6 @@ export default function TablesPage() {
                         </button>
 
                         {selectedTable.columns.length === 0 ? (
-                            // Если колонок нет, отображаем только форму по центру
                             <div className="flex flex-col items-center text-white">
                                 <h3 className="text-xl font-extrabold mb-5 text-center text-purple-300">Добавить колонку</h3>
                                 <input
@@ -522,10 +511,16 @@ export default function TablesPage() {
                                     className="p-4 border border-white/40 rounded-md hover:bg-white/10 transition-all w-full mb-3 appearance-none cursor-pointer focus:ring-2 focus:ring-blue-500 focus:outline-none"
                                 >
                                     <option value="VARCHAR" className="bg-gray-800">VARCHAR</option>
+                                    <option value="TEXT" className="bg-gray-800">TEXT</option>
                                     <option value="INT" className="bg-gray-800">INT</option>
+                                    <option value="DECIMAL" className="bg-gray-800">DECIMAL</option>
+                                    <option value="NUMERIC" className="bg-gray-800">NUMERIC</option>
                                     <option value="BOOLEAN" className="bg-gray-800">BOOLEAN</option>
                                     <option value="DATE" className="bg-gray-800">DATE</option>
-                                    <option value="TEXT" className="bg-gray-800">TEXT</option>
+                                    <option value="TIMESTAMP" className="bg-gray-800">TIMESTAMP</option>
+                                    <option value="UUID" className="bg-gray-800">UUID</option>
+                                    <option value="JSONB" className="bg-gray-800">JSONB</option>
+                                    <option value="SERIAL" className="bg-gray-800">SERIAL</option>
                                 </select>
                                 <button
                                     onClick={addColumn}
@@ -574,11 +569,17 @@ export default function TablesPage() {
                                             onChange={(e) => setColumnType(e.target.value)}
                                             className="p-4 border border-white/40 rounded-md w-full mb-2 appearance-none cursor-pointer text-white placeholder-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
                                         >
-                                            <option className="bg-gray-800 text-white" value="VARCHAR">VARCHAR</option>
-                                            <option className="bg-gray-800 text-white" value="INT">INT</option>
-                                            <option className="bg-gray-800 text-white" value="BOOLEAN">BOOLEAN</option>
-                                            <option className="bg-gray-800 text-white" value="DATE">DATE</option>
-                                            <option className="bg-gray-800 text-white" value="TEXT">TEXT</option>
+                                            <option value="VARCHAR" className="bg-gray-800">VARCHAR</option>
+                                            <option value="TEXT" className="bg-gray-800">TEXT</option>
+                                            <option value="INT" className="bg-gray-800">INT</option>
+                                            <option value="DECIMAL" className="bg-gray-800">DECIMAL</option>
+                                            <option value="NUMERIC" className="bg-gray-800">NUMERIC</option>
+                                            <option value="BOOLEAN" className="bg-gray-800">BOOLEAN</option>
+                                            <option value="DATE" className="bg-gray-800">DATE</option>
+                                            <option value="TIMESTAMP" className="bg-gray-800">TIMESTAMP</option>
+                                            <option value="UUID" className="bg-gray-800">UUID</option>
+                                            <option value="JSONB" className="bg-gray-800">JSONB</option>
+                                            <option value="SERIAL" className="bg-gray-800">SERIAL</option>
                                         </select>
                                         <button
                                             onClick={addColumn}

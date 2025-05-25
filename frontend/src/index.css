@@ -28,19 +28,19 @@ form {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1f2937;
+  background: #de48fc;
   /* Цвет gray-800 */
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #1f2937;
+  background: #de48fc;
   /* Темнее при наведении (gray-700) */
 }
 
 /* Firefox */
 * {
   scrollbar-width: 14px;
-  scrollbar-color: #1f2937 transparent;
+  scrollbar-color: #de48fc transparent;
   /* Ползунок серый, трек прозрачный */
 }

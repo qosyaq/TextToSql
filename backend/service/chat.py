@@ -5,17 +5,25 @@ from service import table as table_service
 from service import column as column_service
 from service import database as db_service
 from service import user as user_service
-from g4f.client import Client
+from g4f.client import Client, AsyncClient
 from fastapi import HTTPException, status
-import g4f.Provider.Ai4Chat as Provider
 import sqlglot
 import pinecone
 import hashlib
 import os
 from dotenv import load_dotenv
 from data.config import new_session, UserOrm, ChatHistoryOrm, DatabaseOrm
-from sqlalchemy import select, exc, delete
+from sqlalchemy import select, delete
+
 load_dotenv()
+
+dialect_map = {
+    "postgresql": "postgres",
+    "mysql": "mysql",
+    "sqlite": "sqlite",
+    "mssql": "tsql",
+    "duckdb": "duckdb"
+}
 
 
 async def generate_id(text: str) -> str:
@@ -67,10 +75,10 @@ def normalize_schema(schema: dict) -> str:
     return "\n".join(normalized_tables)
 
 
-async def save_sql_to_pinecone(natural_query: str, sql_query: str, schema: dict):
+async def save_sql_to_pinecone(natural_query: str, sql_query: str, schema: dict, db_type: str):
     schema_string = normalize_schema(schema)
 
-    combined_text = f"Query: {natural_query}\nSchema:\n{schema_string}"
+    combined_text = f"DB_TYPE: {db_type.upper()}\nQuery: {natural_query}\nSchema:\n{schema_string}"
 
     record = {
         "_id": await generate_id(combined_text),
@@ -82,10 +90,10 @@ async def save_sql_to_pinecone(natural_query: str, sql_query: str, schema: dict)
     print(f"[PINECONE] Сохранено: {natural_query} → {sql_query}")
 
 
-async def find_sql_in_pinecone(natural_query: str, schema: dict, top_k=5) -> str | None:
+async def find_sql_in_pinecone(natural_query: str, schema: dict, db_type: str, top_k=5) -> str | None:
     schema_string = normalize_schema(schema)
 
-    combined_text = f"Query: {natural_query}\nSchema:\n{schema_string}"
+    combined_text = f"DB_TYPE: {db_type.upper()}\nQuery: {natural_query}\nSchema:\n{schema_string}"
 
     response = index.search(
         namespace="sql-namespace",
@@ -108,6 +116,15 @@ async def find_sql_in_pinecone(natural_query: str, schema: dict, top_k=5) -> str
         if not hits:
             return None
 
+        filtered_hits = [
+            hit for hit in hits
+            if f"DB_TYPE: {db_type.upper()}" in hit["fields"].get("chunk_text", "")
+        ]
+
+        if not filtered_hits:
+            print("[PINECONE] Нет подходящих SQL по текущей СУБД")
+            return None
+
         best_hit = max(hits, key=lambda x: x["_score"])
         best_sql = best_hit["fields"]["sql"]
         best_score = best_hit["_score"]
@@ -122,9 +139,8 @@ async def find_sql_in_pinecone(natural_query: str, schema: dict, top_k=5) -> str
     return None
 
 
-async def add_message_to_chat_history(token: str, db_id: int, data: ChatRequest, sender: str) -> Chat | None:
+async def add_message_to_chat_history(db_id: int, data: ChatRequest, sender: str) -> Chat | None:
     try:
-        user_model: UserOrm = await user_service.verify_token(token)
         async with new_session() as session:
             chat_dict = data.model_dump()
             message_orm = ChatHistoryOrm(**chat_dict, sender=sender, database_id=db_id)
@@ -141,9 +157,12 @@ async def sql_generation(chat: ChatRequest, db_name: str, token: str) -> dict:
     if not chat.content:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Request can not be empty!")
 
-    db_id = await db_service.get_db_id_if_exists(token, db_name)
-    if not db_id:
+    db_model: DatabaseOrm = await db_service.get_db_model(token, db_name)
+    if not db_model:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Database not found!")
+
+    db_id = db_model.id
+    db_type = db_model.db_type
 
     result = {}
     tables = await table_service.get_all_tables_from_db(db_name, token, None, None, None)
@@ -153,51 +172,68 @@ async def sql_generation(chat: ChatRequest, db_name: str, token: str) -> dict:
 
     schema = {"tables": result}
 
-    similar_sql = await find_sql_in_pinecone(chat.content, schema)
+    similar_sql = await find_sql_in_pinecone(chat.content, schema, db_type)
     if similar_sql:
         print("Используем кешированный SQL")
-        await add_message_to_chat_history(token, db_id, ChatRequest(content=chat.content), sender="user")
-        await add_message_to_chat_history(token, db_id, ChatRequest(content=similar_sql), sender="system")
+        await add_message_to_chat_history(db_id, ChatRequest(content=chat.content), sender="user")
+        await add_message_to_chat_history(db_id, ChatRequest(content=similar_sql), sender="system")
         return {"sql": similar_sql, "schema": result}
 
-    client = Client(provider=Provider)
+    client = AsyncClient()
     prompt = f"""
-    Convert the following task description into a valid SQL query.
+    You are an advanced SQL generation system. Given a user instruction, database schema, and target SQL dialect, your job is to generate a single-line, syntactically valid, and logically correct SQL query that **strictly matches the user's task**.
 
-    Task: {chat.content}
+    ### Task:
+    {chat.content}
 
-    Schema details:
+    ### Database Schema:
     {schema}
 
-    Instructions:
-    1. Read the task description carefully.
-    2. Identify the relevant tables and columns.
-    3. Create an SQL query matching the schema structure.
-    4. **Return only raw SQL code** with no additional text.
-    5. **Do not use any HTML entities or encoding. Use only plain text characters.**
-    6. Write SQL **on one line** without line breaks.
-    7. Ensure the query is syntactically correct.
-    8. Simplify as much as possible
+    ### SQL Dialect:
+    {db_type.upper()}
+
+    ### Guidelines:
+    - Output only a **single-line raw SQL query**, with **no comments, no line breaks, and no extra text**.
+    - Use only **tables and columns that appear in the schema**. Do not invent anything.
+    - **Do not add filters, aggregations, or conditions** unless they are **explicitly stated** in the task.
+    - Use **explicit JOINs** (no NATURAL joins).
+    - Apply SQL syntax **specific to the dialect** ({db_type.upper()}) when needed:
+        - PostgreSQL → `EXTRACT(YEAR FROM date_column)` or `CURRENT_DATE - INTERVAL '2 years'`
+        - MySQL → `YEAR(date_column)` or `DATE_SUB(CURDATE(), INTERVAL 2 YEAR)`
+        - SQLite → `strftime('%Y', date_column)`
+        - SQL Server → `YEAR(date_column)` or `GETDATE()`
+    - Use standard SQL functions like `COUNT(DISTINCT ...)`, `COALESCE(...)`, `EXISTS(...)`, `CASE WHEN ... THEN ... END` when the task requires them.
+    - Be conservative: if the task is ambiguous, prefer the **most general and safe interpretation** without making up constraints.
+    - Never use markdown, code blocks, or escape sequences.
+
+    ### Final Output:
+    Return only the raw SQL query as one line.
     """
+
     sql_query = None
 
     for attempt in range(1, 4):
         print(f" Попытка {attempt}: Генерация SQL запроса...")
 
-        response = await asyncio.to_thread(
-            client.chat.completions.create,
-            model="gpt-4",
-            messages=[{"role": "user", "content": prompt}]
+        response = await client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {
+                    "role": "user", "content": prompt
+                }
+            ],
+            web_search=False
         )
+
 
         sql_query = html.unescape(response.choices[0].message.content.strip())
 
-        is_valid = all(await asyncio.gather(
-            validate_sql_syntax(sql_query, "sqlite"),
-            validate_sql_syntax(sql_query, "mysql"),
-            validate_sql_syntax(sql_query, "postgres"),
-            validate_sql_syntax(sql_query, "duckdb")
-        ))
+        sqlglot_dialect = dialect_map.get(db_type.lower())
+
+        if not sqlglot_dialect:
+            raise HTTPException(status_code=400, detail=f"Unsupported SQL dialect: {db_type}")
+
+        is_valid = await validate_sql_syntax(sql_query, sqlglot_dialect)
 
         if is_valid:
             print(f"SQL валиден на {attempt}-й попытке.")
@@ -209,34 +245,34 @@ async def sql_generation(chat: ChatRequest, db_name: str, token: str) -> dict:
     if sql_query is None:
         raise HTTPException(status_code=500, detail="Failed to generate a valid SQL query after multiple attempts")
 
-    await save_sql_to_pinecone(chat.content, sql_query, schema)
-    await add_message_to_chat_history(token, db_id, ChatRequest(content=chat.content), sender="user")
-    await add_message_to_chat_history(token, db_id, ChatRequest(content=sql_query), sender="system")
+    await save_sql_to_pinecone(chat.content, sql_query, schema, db_type)
+    await add_message_to_chat_history(db_id, ChatRequest(content=chat.content), sender="user")
+    await add_message_to_chat_history(db_id, ChatRequest(content=sql_query), sender="system")
 
     return {"sql": sql_query, "schema": result}
 
 
 async def get_chat_history(db_name, page, page_size, skip, token) -> list[Chat] | None:
-        user_model: UserOrm = await user_service.verify_token(token)
-        user_id = user_model.id
-        if not await db_service.get_db_id_if_exists(token, db_name):
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Database not found!")
+    user_model: UserOrm = await user_service.verify_token(token)
+    user_id = user_model.id
+    if not await db_service.get_db_id_if_exists(token, db_name):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Database not found!")
 
-        async with new_session() as session:
-            query = select(ChatHistoryOrm).join(DatabaseOrm).where(
-                DatabaseOrm.db_name == db_name,
-                DatabaseOrm.user_id == user_id
-            ).order_by(ChatHistoryOrm.created_at)
+    async with new_session() as session:
+        query = select(ChatHistoryOrm).join(DatabaseOrm).where(
+            DatabaseOrm.db_name == db_name,
+            DatabaseOrm.user_id == user_id
+        ).order_by(ChatHistoryOrm.created_at)
 
-            if page is not None and page_size is not None:
-                offset = (page - 1) * page_size
-                query = query.offset(offset).limit(page_size)
-            elif skip is not None:
-                query = query.offset(skip)
+        if page is not None and page_size is not None:
+            offset = (page - 1) * page_size
+            query = query.offset(offset).limit(page_size)
+        elif skip is not None:
+            query = query.offset(skip)
 
-            result = await session.execute(query)
-            chat_models = result.scalars().all()
-            return [Chat.from_orm(chat_model) for chat_model in chat_models]
+        result = await session.execute(query)
+        chat_models = result.scalars().all()
+        return [Chat.from_orm(chat_model) for chat_model in chat_models]
 
 
 async def clear_chat_history(token: str, db_name: str) -> dict:

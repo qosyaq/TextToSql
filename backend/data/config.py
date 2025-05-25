@@ -1,4 +1,4 @@
-from sqlalchemy import ForeignKey, UniqueConstraint, DateTime, func, Text
+from sqlalchemy import ForeignKey, UniqueConstraint, DateTime, func, Text, String
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from sqlalchemy.orm import Mapped, mapped_column, declarative_base, relationship
 
@@ -51,6 +51,7 @@ class DatabaseOrm(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
     db_name: Mapped[str]
+    db_type: Mapped[str] = mapped_column(String(20), nullable=False)
     tables: Mapped[list[TableOrm] | None] = relationship('TableOrm', back_populates='database', cascade="all, delete")
     user: Mapped['UserOrm'] = relationship('UserOrm', back_populates='databases')
     chat_history: Mapped[list['ChatHistoryOrm']] = relationship('ChatHistoryOrm', back_populates='database',

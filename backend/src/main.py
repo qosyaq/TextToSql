@@ -1,5 +1,5 @@
 import uvicorn
-from fastapi import FastAPI, Response
+from fastapi import FastAPI
 from dotenv import load_dotenv
 from contextlib import asynccontextmanager
 from data.config import create_tables, delete_tables

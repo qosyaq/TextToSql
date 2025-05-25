@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 export default function Databases() {
     const [databases, setDatabases] = useState<{ db_name: string }[]>([]);
     const [dbName, setDbName] = useState("");
+    const [dbType, setDbType] = useState("");
     const [showInput, setShowInput] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const [searchModalOpen, setSearchModalOpen] = useState(false);
@@ -63,7 +64,7 @@ export default function Databases() {
                     "Authorization": `Bearer ${token}`,
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ db_name: dbName }),
+                body: JSON.stringify({ db_name: dbName, db_type: dbType }),
             });
 
             const data = await response.json();
@@ -108,7 +109,6 @@ export default function Databases() {
 
                 </h1>
 
-                {/* Список баз данных (с пагинацией) */}
                 {databases.length === 0 ? (
                     <p className="text-xl text-gray-300 mb-10">У вас пока нет баз данных.</p>
                 ) : (
@@ -125,8 +125,6 @@ export default function Databases() {
                     </>
                 )}
 
-                {/* Кнопка "Добавить базу данных" */}
-                {/* Кнопка "Добавить БД" */}
                 <button
                     onClick={() => setShowInput(true)}
                     className="bg-purple-900 text-white px-6 py-3 rounded-md text-lg font-semibold hover:bg-gray-900 transition-all cursor-pointer"
@@ -134,7 +132,7 @@ export default function Databases() {
                     +
                 </button>
 
-                {/* Кнопки пагинации (находятся в самом низу) */}
+                {/* Кнопки пагинации*/}
                 {databases.length > itemsPerPage && (
                     <div className="flex space-x-4 mt-4">
                         <button
@@ -161,37 +159,49 @@ export default function Databases() {
                     </div>
                 )}
 
-                {/* Модальное окно (dropdown) */}
                 {showInput && (
                     <div className="fixed inset-0 flex items-center justify-center bg-gray-900/50 backdrop-blur-lg z-30 transition">
-                        <div className="p-6 text-white border border-white/30 rounded-lg shadow-lg w-96 relative ">
+                        <div className="p-6 text-white border border-white/30 rounded-lg shadow-lg w-96 relative">
                             <button
                                 onClick={() => setShowInput(false)}
                                 className="absolute top-2 right-3 hover:text-red-400 cursor-pointer"
                             >
                                 ✕
                             </button>
+
                             <h2 className="text-xl font-bold mb-4 text-center">Создать базу данных</h2>
 
-
-                            {/* Поле ввода */}
                             <input
                                 type="text"
                                 value={dbName}
                                 onChange={(e) => setDbName(e.target.value)}
                                 placeholder="Название базы данных"
-                                className="p-4 border border-white/40 placeholder-gray/50 italic rounded-md w-full mb-5 focus:outline-none hover:bg-white/10 transition-all"
+                                className="p-4 border border-white/40 placeholder-gray/50 italic rounded-md w-full mb-4 focus:outline-none hover:bg-white/10 transition-all"
                             />
-                            {/* Кнопка "Создать" */}
+
+                            <select
+                                value={dbType}
+                                onChange={(e) => setDbType(e.target.value)}
+                                className="p-4 border border-white/40 rounded-md hover:bg-white/10 transition-all w-full mb-5 appearance-none cursor-pointer focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                            >
+                                <option value="" disabled hidden className="bg-gray-800 hover:bg-gray-800/20">Выберите СУБД</option>
+                                <option value="postgresql" className="bg-gray-800 hover:bg-gray-800/20">PostgreSQL</option>
+                                <option value="mysql" className="bg-gray-800 hover:bg-gray-800/20">MySQL</option>
+                                <option value="sqlite" className="bg-gray-800 hover:bg-gray-800/20">SQLite</option>
+                                <option value="mssql" className="bg-gray-800 hover:bg-gray-800/20">SQL Server</option>
+                            </select>
+
+
                             <button
                                 onClick={createDatabase}
-                                className="w-full bg-gradient-to-br from-blue-400 to-purple-700  text-white px-4 py-2 rounded-md transition-all hover:text-purple-100 hover:scale-101 cursor-pointer"
+                                className="w-full bg-gradient-to-br from-blue-400 to-purple-700 text-white px-4 py-2 rounded-md transition-all hover:text-purple-100 hover:scale-101 cursor-pointer"
                             >
                                 Создать
                             </button>
                         </div>
                     </div>
                 )}
+
                 <p
                     className="mt-4 text-sm text-gray-300 underline cursor-pointer hover:text-white transition"
                     onClick={() => setSearchModalOpen(true)}
@@ -217,8 +227,6 @@ export default function Databases() {
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 className="p-3 border border-white/40 rounded-md w-full mb-2 hover:bg-white/10 transition-all focus:outline-none"
                             />
-
-                            {/* Результаты */}
                             <div className="space-y-2 max-h-60 overflow-y-auto">
                                 {databases
                                     .filter((db) =>

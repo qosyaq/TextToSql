@@ -14,3 +14,4 @@ pydantic
 pinecone
 sqlglot
 pydantic[email]
+nest_asyncio

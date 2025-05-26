@@ -91,7 +91,7 @@ export default function TablesPage() {
         if (!token || !db_name) return;
         try {
             const response = await fetch(
-                `${API_URL}/${db_name}/table/${tableName}/columns`,
+                `${API_URL}/database/${db_name}/table/${tableName}/columns`,
                 {
                     headers: { Authorization: `Bearer ${token}` },
                 }

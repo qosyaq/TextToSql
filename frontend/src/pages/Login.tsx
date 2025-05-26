@@ -80,7 +80,6 @@ export default function Login() {
         <div className="min-h-screen flex flex-col">
             <LoginHeader />
 
-            {/* Основной контент */}
             <main className="flex-grow flex items-center justify-center bg-gradient-to-r from-purple-800 to-blue-400 p-4">
                 <div className="w-full max-w-md bg-white rounded-lg shadow-lg p-8 relative">
                     {notification && (

@@ -8,7 +8,7 @@ export default function Header() {
     return (
         <header className="bg-gradient-to-r from-blue-800 to-purple-400 p-4 shadow-md">
             <div className="container mx-auto flex justify-between items-center">
-                {/* Логотип */}
+                {/*Логотип*/}
                 <Link
                     to="/"
                     className="text-white text-2xl font-bold tracking-wide hover:scale-105 transition-transform flex items-center gap-2"
@@ -17,7 +17,7 @@ export default function Header() {
                     Text-to-SQL
                 </Link>
 
-                {/* Бургер-кнопка */}
+                {/*Бургер-кнопка*/}
                 <button
                     className="lg:hidden text-white"
                     onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -25,7 +25,7 @@ export default function Header() {
                     {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
                 </button>
 
-                {/* 📱 Мобильное меню */}
+                {/*Мобильное меню*/}
                 <nav
                     className={`flex flex-col gap-2 absolute top-16 left-0 right-0 z-50 bg-gradient-to-r from-blue-800 to-purple-400 p-4 rounded-lg shadow-lg transition-all duration-300 lg:hidden
                     ${isMenuOpen ? "flex" : "hidden"}`}
@@ -41,7 +41,7 @@ export default function Header() {
                     </Link>
                 </nav>
 
-                {/* 🖥️ Десктопное меню */}
+                {/*Десктопное меню*/}
                 <nav className="hidden lg:flex space-x-4">
                     <Link to="/" className="px-4 py-2 bg-white text-gray-900 font-semibold rounded-lg shadow-md hover:bg-gray-200 transition">
                         Главная

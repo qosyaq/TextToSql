@@ -159,7 +159,7 @@ export default function Chat() {
                                     onClick={handleTranslate}
                                     disabled={isLoading}
                                     className={`mt-4 flex items-center justify-center gap-2 px-6 py-2 rounded-xl 
-        ${isLoading ? "bg-gradient-to-r from-blue-500 to-purple-600 cursor-not-allowed opacity-70" : "bg-gradient-to-r from-blue-500 to-purple-600"} 
+        ${isLoading ? "bg-gradient-to-r from-blue-500 to-purple-600     cursor-not-allowed opacity-70" : "bg-gradient-to-r from-blue-500 to-purple-600"} 
         text-white shadow-xl hover:from-blue-700 hover:to-purple-900 transition-all duration-300 cursor-pointer`}
                                 >
                                     {isLoading ? (

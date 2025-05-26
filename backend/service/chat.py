@@ -1,11 +1,10 @@
-import asyncio
 import html
 from model.chat import Chat, ChatRequest
 from service import table as table_service
 from service import column as column_service
 from service import database as db_service
 from service import user as user_service
-from g4f.client import Client, AsyncClient
+from g4f.client import AsyncClient
 from fastapi import HTTPException, status
 import sqlglot
 import pinecone
@@ -27,7 +26,7 @@ dialect_map = {
 
 
 async def generate_id(text: str) -> str:
-    return hashlib.sha256(text.encode("utf-8")).hexdigest()[:16]
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()[:32]
 
 
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
@@ -92,9 +91,21 @@ async def save_sql_to_pinecone(natural_query: str, sql_query: str, schema: dict,
 
 async def find_sql_in_pinecone(natural_query: str, schema: dict, db_type: str, top_k=5) -> str | None:
     schema_string = normalize_schema(schema)
-
     combined_text = f"DB_TYPE: {db_type.upper()}\nQuery: {natural_query}\nSchema:\n{schema_string}"
 
+    # By same id
+    query_id = await generate_id(combined_text)
+    by_id = index.fetch(ids=[query_id], namespace="sql-namespace")
+
+    if by_id and by_id.vectors and query_id in by_id.vectors:
+        vector_data = by_id.vectors[query_id]
+        metadata = vector_data.metadata or {}
+        sql = metadata.get("sql") if isinstance(metadata, dict) else None
+        if sql:
+            print("[PINECONE] Точное совпадение по ID найдено.")
+            return sql
+
+    # rerank
     response = index.search(
         namespace="sql-namespace",
         query={
@@ -112,7 +123,6 @@ async def find_sql_in_pinecone(natural_query: str, schema: dict, db_type: str, t
 
     if response and "result" in response and "hits" in response["result"]:
         hits = response["result"]["hits"]
-
         if not hits:
             return None
 
@@ -125,11 +135,11 @@ async def find_sql_in_pinecone(natural_query: str, schema: dict, db_type: str, t
             print("[PINECONE] Нет подходящих SQL по текущей СУБД")
             return None
 
-        best_hit = max(hits, key=lambda x: x["_score"])
+        best_hit = max(filtered_hits, key=lambda x: x["_score"])
         best_sql = best_hit["fields"]["sql"]
         best_score = best_hit["_score"]
 
-        if best_score < 0.90:
+        if best_score < 0.87:
             print(best_score)
             return None
 
@@ -180,8 +190,9 @@ async def sql_generation(chat: ChatRequest, db_name: str, token: str) -> dict:
         return {"sql": similar_sql, "schema": result}
 
     client = AsyncClient()
-    prompt = f"""
-    You are an advanced SQL generation system. Given a user instruction, database schema, and target SQL dialect, your job is to generate a single-line, syntactically valid, and logically correct SQL query that **strictly matches the user's task**.
+    prompt = f""" You are an advanced SQL generation system. Given a user instruction, database schema, and target 
+    SQL dialect, your job is to generate a single-line, syntactically valid, and logically correct SQL query that 
+    **strictly matches the user's task**. 
 
     ### Task:
     {chat.content}
@@ -197,14 +208,12 @@ async def sql_generation(chat: ChatRequest, db_name: str, token: str) -> dict:
     - Use only **tables and columns that appear in the schema**. Do not invent anything.
     - **Do not add filters, aggregations, or conditions** unless they are **explicitly stated** in the task.
     - Use **explicit JOINs** (no NATURAL joins).
-    - Apply SQL syntax **specific to the dialect** ({db_type.upper()}) when needed:
-        - PostgreSQL → `EXTRACT(YEAR FROM date_column)` or `CURRENT_DATE - INTERVAL '2 years'`
-        - MySQL → `YEAR(date_column)` or `DATE_SUB(CURDATE(), INTERVAL 2 YEAR)`
-        - SQLite → `strftime('%Y', date_column)`
-        - SQL Server → `YEAR(date_column)` or `GETDATE()`
-    - Use standard SQL functions like `COUNT(DISTINCT ...)`, `COALESCE(...)`, `EXISTS(...)`, `CASE WHEN ... THEN ... END` when the task requires them.
-    - Be conservative: if the task is ambiguous, prefer the **most general and safe interpretation** without making up constraints.
-    - Never use markdown, code blocks, or escape sequences.
+    - Apply SQL syntax **specific to the dialect** ({db_type.upper()}) when needed: - PostgreSQL → `EXTRACT(YEAR FROM 
+    date_column)` or `CURRENT_DATE - INTERVAL '2 years'` - MySQL → `YEAR(date_column)` or `DATE_SUB(CURDATE(), 
+    INTERVAL 2 YEAR)` - SQLite → `strftime('%Y', date_column)` - SQL Server → `YEAR(date_column)` or `GETDATE()` - 
+    Use standard SQL functions like `COUNT(DISTINCT ...)`, `COALESCE(...)`, `EXISTS(...)`, `CASE WHEN ... THEN ... 
+    END` when the task requires them. - Be conservative: if the task is ambiguous, prefer the **most general and safe 
+    interpretation** without making up constraints. - Never use markdown, code blocks, or escape sequences. 
 
     ### Final Output:
     Return only the raw SQL query as one line.
@@ -224,7 +233,6 @@ async def sql_generation(chat: ChatRequest, db_name: str, token: str) -> dict:
             ],
             web_search=False
         )
-
 
         sql_query = html.unescape(response.choices[0].message.content.strip())
 

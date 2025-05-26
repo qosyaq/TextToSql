@@ -13,10 +13,9 @@ export default function App() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      {/* Верхняя навигация */}
       <Header />
 
-      {/* Основной контент на весь экран */}
+      {/* Основной контент*/}
       <main className="flex-grow flex flex-col items-center justify-center text-center bg-gradient-to-r from-blue-600 to-purple-800 text-white p-6">
         <h1 className="text-5xl font-extrabold mb-4 animate-fade-in drop-shadow-lg">
           Добро пожаловать в <span className="text-pink-400">Text-to-SQL</span>
@@ -42,7 +41,6 @@ export default function App() {
 
       </main>
 
-      {/* Нижний футер */}
       <Footer />
     </div>
   );

@@ -353,7 +353,7 @@ export default function TablesPage() {
                         {Array.from({ length: itemsPerPage }).map((_, i) => (
                             <li
                                 key={i}
-                                className="h-20 bg-white/10 rounded-md w-full"
+                                className="h-15 bg-white/10 rounded-md w-full"
                             ></li>
                         ))}
                     </ul>

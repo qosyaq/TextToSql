@@ -13,3 +13,4 @@ asyncpg
 pydantic
 pinecone
 sqlglot
+pydantic[email]

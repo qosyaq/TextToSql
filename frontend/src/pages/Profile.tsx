@@ -117,7 +117,16 @@ export default function Profile() {
                         </div>
                     </div>
                 ) : (
-                    <p className="text-gray-300">Загрузка...</p>
+                    <div className="bg-white/5 backdrop-blur border border-white/20 p-6 rounded-lg shadow-lg w-full max-w-md">
+                        <div className="flex flex-col gap-4 animate-pulse">
+                            <div className="h-4 bg-white/10 rounded w-1/3"></div>
+                            <div className="h-4 bg-white/10 rounded w-1/2"></div>
+                            <div className="h-4 bg-white/10 rounded w-2/5 mb-6"></div>
+
+                            <div className="h-10 bg-white/5 rounded"></div>
+                            <div className="h-10 bg-white/5 rounded"></div>
+                        </div>
+                    </div>
                 )}
 
                 {showDeleteModal && (

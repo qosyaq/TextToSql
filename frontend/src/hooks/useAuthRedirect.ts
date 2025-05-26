@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 
 export const useAuthRedirect = () => {
     const navigate = useNavigate();
+    const API_URL = import.meta.env.VITE_API_URL;
 
     useEffect(() => {
         const token = localStorage.getItem("token");
@@ -11,7 +12,7 @@ export const useAuthRedirect = () => {
             if (!token) return;
 
             try {
-                const response = await fetch("http://127.0.0.1:8000/user/me", {
+                const response = await fetch(`${API_URL}/user/me`, {
                     headers: {
                         "Authorization": `Bearer ${token}`,
                     },

@@ -7,6 +7,7 @@ import { Lightbulb, ArrowLeftRight, Code, Copy, Check, History, Trash2, Bot, Use
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function Chat() {
+    const API_URL = import.meta.env.VITE_API_URL;
     const navigate = useNavigate();
     const { db_name } = useParams();
     const [input, setInput] = useState("");
@@ -42,7 +43,7 @@ export default function Chat() {
     const fetchHistory = async () => {
         try {
             const token = localStorage.getItem("token");
-            const res = await fetch(`http://localhost:8000/database/${db_name}/chat`, {
+            const res = await fetch(`${API_URL}/database/${db_name}/chat`, {
                 headers: {
                     "Authorization": `Bearer ${token}`,
                     "Content-Type": "application/json",
@@ -70,7 +71,7 @@ export default function Chat() {
         try {
             setIsLoading(true);
             const token = localStorage.getItem("token");
-            const res = await fetch(`http://localhost:8000/database/${db_name}/chat`, {
+            const res = await fetch(`${API_URL}/database/${db_name}/chat`, {
                 method: "POST",
                 headers: {
                     "Authorization": `Bearer ${token}`,
@@ -106,7 +107,7 @@ export default function Chat() {
         try {
             setIsClearing(true);
             const token = localStorage.getItem("token");
-            await fetch(`http://localhost:8000/database/${db_name}/chat`, {
+            await fetch(`${API_URL}/database/${db_name}/chat`, {
                 method: "DELETE",
                 headers: {
                     "Authorization": `Bearer ${token}`,

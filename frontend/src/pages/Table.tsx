@@ -16,6 +16,7 @@ interface Table {
 }
 
 export default function TablesPage() {
+    const API_URL = import.meta.env.VITE_API_URL;
     const { db_name } = useParams<{ db_name: string }>();
     const [tables, setTables] = useState<Table[]>([]);
     const [selectedTable, setSelectedTable] = useState<Table | null>(null);
@@ -70,7 +71,7 @@ export default function TablesPage() {
     const fetchTables = async () => {
         if (!token || !db_name) return;
         try {
-            const response = await fetch(`http://127.0.0.1:8000/database/${db_name}/tables`, {
+            const response = await fetch(`${API_URL}/database/${db_name}/tables`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             if (response.ok) {
@@ -90,7 +91,7 @@ export default function TablesPage() {
         if (!token || !db_name) return;
         try {
             const response = await fetch(
-                `http://127.0.0.1:8000/database/${db_name}/table/${tableName}/columns`,
+                `${API_URL}/${db_name}/table/${tableName}/columns`,
                 {
                     headers: { Authorization: `Bearer ${token}` },
                 }
@@ -127,7 +128,7 @@ export default function TablesPage() {
         if (!token || !db_name) return;
 
         try {
-            const response = await fetch(`http://127.0.0.1:8000/database/${db_name}/table`, {
+            const response = await fetch(`${API_URL}/database/${db_name}/table`, {
                 method: "POST",
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -161,7 +162,7 @@ export default function TablesPage() {
         if (!token || !db_name) return;
         try {
             const response = await fetch(
-                `http://127.0.0.1:8000/database/${db_name}/table/${tableName}`,
+                `${API_URL}/database/${db_name}/table/${tableName}`,
                 {
                     method: "DELETE",
                     headers: { Authorization: `Bearer ${token}` },
@@ -200,7 +201,7 @@ export default function TablesPage() {
 
         try {
             const response = await fetch(
-                `http://127.0.0.1:8000/database/${db_name}/table/${selectedTable.table_name}/column`,
+                `${API_URL}/database/${db_name}/table/${selectedTable.table_name}/column`,
                 {
                     method: "POST",
                     headers: {
@@ -252,7 +253,7 @@ export default function TablesPage() {
 
         try {
             const response = await fetch(
-                `http://127.0.0.1:8000/database/${db_name}/table/${selectedTable.table_name}/column/${columnName}`,
+                `${API_URL}/database/${db_name}/table/${selectedTable.table_name}/column/${columnName}`,
                 {
                     method: "DELETE",
                     headers: { Authorization: `Bearer ${token}` },
@@ -284,7 +285,7 @@ export default function TablesPage() {
     const deleteDatabase = async () => {
         if (!token || !db_name) return;
         try {
-            const response = await fetch(`http://127.0.0.1:8000/database/${db_name}`, {
+            const response = await fetch(`${API_URL}/database/${db_name}`, {
                 method: "DELETE",
                 headers: { Authorization: `Bearer ${token}` },
             });

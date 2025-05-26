@@ -5,7 +5,7 @@ aiosqlite
 httpie
 pyjwt
 starlette
-g4f==0.3.3.3
+g4f[all]
 typing
 bcrypt
 python-dotenv

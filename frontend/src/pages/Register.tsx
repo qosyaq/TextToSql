@@ -45,7 +45,7 @@ export default function Register() {
         if (response.ok) {
             setNotification({ type: "success", message: "Успешная регистрация! Перенаправление..." });
             setTimeout(() => {
-                navigate("/user/login"); // Перенаправление на страницу входа
+                navigate("/user/login");
             }, 2000);
         } else {
             if (data.detail && Array.isArray(data.detail)) {
@@ -61,10 +61,8 @@ export default function Register() {
 
     return (
         <div className="min-h-screen flex flex-col">
-            {/* Специальный Header для регистрации */}
             <RegisterHeader />
 
-            {/* Основной контент */}
             <main className="flex-grow flex items-center justify-center bg-gradient-to-r from-blue-800 to-purple-400 p-4">
                 <div className="w-full max-w-md bg-white rounded-lg shadow-lg p-8 relative">
                     {notification && (
@@ -130,7 +128,6 @@ export default function Register() {
                 </div>
             </main>
 
-            {/* Специальный Footer для регистрации */}
             <RegisterFooter />
         </div>
     );

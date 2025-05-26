@@ -11,10 +11,13 @@ import ProtectedRoute from "./components/ProtectedRoute.tsx";
 import NotFound from "./pages/NotFound";
 import Chat from "./pages/Chat";
 import Profile from "./pages/Profile.tsx";
+import PageTitleSetter from "./components/PageTitleSetter";
+
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <BrowserRouter>
+      <PageTitleSetter />
       <Routes>
         <Route path="/" element={<App />} />
         <Route path="/user/register" element={<Register />} />
@@ -27,7 +30,6 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
           <Route path="/user/profile" element={<Profile />} />
         </Route>
 
-        {/* Другие маршруты */}
         <Route path="*" element={<NotFound />} /> {/* Страница 404 */}
 
       </Routes>

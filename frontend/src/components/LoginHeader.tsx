@@ -28,7 +28,7 @@ export default function Header() {
                     Text-to-SQL
                 </Link>
 
-                {/* Бургер-кнопка только для мобильных */}
+                {/*Бургер-кнопка только для мобильных*/}
                 <button
                     className="lg:hidden text-white"
                     onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -36,7 +36,7 @@ export default function Header() {
                     {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
                 </button>
 
-                {/* 📱 Мобильный nav */}
+                {/*Мобильный nav*/}
                 <nav
                     className={`flex-col gap-2 absolute top-16 left-0 right-0 
                         p-4 rounded-lg shadow-lg transition-all duration-300 z-50
@@ -73,7 +73,7 @@ export default function Header() {
                     )}
                 </nav>
 
-                {/* 🖥️ Десктоп nav — без bg, без blur, с теми же кнопками */}
+                {/*Десктоп nav*/}
                 <nav className="hidden lg:flex flex-row gap-4 items-center">
                     {!isAuthenticated ? (
                         <>

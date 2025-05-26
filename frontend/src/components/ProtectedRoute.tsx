@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 export default function ProtectedRoute() {
     const location = useLocation();
     const [valid, setValid] = useState<boolean | null>(null);
+    const API_URL = import.meta.env.VITE_API_URL;
 
     useEffect(() => {
         const checkToken = async () => {
@@ -15,7 +16,7 @@ export default function ProtectedRoute() {
             }
 
             try {
-                const response = await fetch("http://127.0.0.1:8000/user/me", {
+                const response = await fetch(`${API_URL}/user/me`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },

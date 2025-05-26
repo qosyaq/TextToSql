@@ -14,13 +14,14 @@ export default function Profile() {
     const token = localStorage.getItem("token");
     const navigate = useNavigate();
     const location = useLocation();
+    const API_URL = import.meta.env.VITE_API_URL;
 
     useEffect(() => {
         const fetchProfile = async () => {
             if (!token) return;
 
             try {
-                const response = await fetch("http://127.0.0.1:8000/user/profile", {
+                const response = await fetch(`${API_URL}/user/profile`, {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
@@ -52,7 +53,7 @@ export default function Profile() {
     };
     const handleDelete = async () => {
         try {
-            const res = await fetch("http://127.0.0.1:8000/user/delete", {
+            const res = await fetch(`${API_URL}/user/delete`, {
                 method: "DELETE",
                 headers: {
                     Authorization: `Bearer ${token}`,

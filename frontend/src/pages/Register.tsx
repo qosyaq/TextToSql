@@ -7,9 +7,11 @@ import { AiOutlineLoading3Quarters } from "react-icons/ai"
 import { useAuthRedirect } from "../hooks/useAuthRedirect"
 import { motion } from "framer-motion";
 
+
+
 export default function Register() {
     useAuthRedirect();
-
+    const API_URL = import.meta.env.VITE_API_URL;
     const [formData, setFormData] = useState({
         email: "",
         password: "",
@@ -35,7 +37,7 @@ export default function Register() {
         setLoading(true);
 
 
-        const response = await fetch("http://127.0.0.1:8000/user/register", {
+        const response = await fetch(`${API_URL}/user/register`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(formData),

@@ -5,6 +5,7 @@ import { DatabaseZap } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function Databases() {
+    const API_URL = import.meta.env.VITE_API_URL;
     const [databases, setDatabases] = useState<{ db_name: string }[]>([]);
     const [dbName, setDbName] = useState("");
     const [dbType, setDbType] = useState("");
@@ -33,7 +34,7 @@ export default function Databases() {
     const fetchDatabases = async () => {
         if (!token) return;
         try {
-            const response = await fetch("http://127.0.0.1:8000/databases", {
+            const response = await fetch(`${API_URL}/databases`, {
                 method: "GET",
                 headers: {
                     "Authorization": `Bearer ${token}`,
@@ -58,7 +59,7 @@ export default function Databases() {
         }
 
         try {
-            const response = await fetch("http://127.0.0.1:8000/database", {
+            const response = await fetch(`${API_URL}/database`, {
                 method: "POST",
                 headers: {
                     "Authorization": `Bearer ${token}`,

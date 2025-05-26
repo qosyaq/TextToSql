@@ -11,9 +11,10 @@
       position: fixed;
       inset: 0;
       z-index: 9999;
-      backdrop-filter: blur(10px);
+      backdrop-filter: blur(12px);
       background: linear-gradient(to bottom right, rgba(91, 33, 182, 0.6), rgba(31, 41, 55, 0.6));
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
       transition: opacity 0.4s ease-in-out;
@@ -22,12 +23,13 @@
     .cube-spinner {
       display: flex;
       gap: 10px;
+      animation: rotateSpinner 1.8s linear infinite;
     }
 
     .cube-spinner div {
       width: 14px;
       height: 14px;
-      background-color: white;
+      background-color: #ffffffcc;
       animation: fadeInOut 1.2s infinite ease-in-out;
     }
 
@@ -55,6 +57,11 @@
         opacity: 0.3;
         transform: scale(0.7);
       }
+    }
+
+    #splash-screen.opacity-0 {
+      opacity: 0;
+      pointer-events: none;
     }
   </style>
 </head>

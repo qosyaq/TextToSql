@@ -13,9 +13,9 @@
       padding: 0;
       width: 100%;
       height: 100%;
-      background: linear-gradient(to bottom right, rgba(122, 76, 196, 0.6), rgba(34, 20, 36, 0.6));
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
+      background: #1f2937;
+      /* Темный фон как у приложения */
+      color-scheme: dark;
     }
 
     #splash-screen {
@@ -23,9 +23,9 @@
       inset: 0;
       z-index: 9999;
       backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
       background: linear-gradient(to bottom right, rgba(91, 33, 182, 0.6), rgba(31, 41, 55, 0.6));
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
       transition: opacity 0.4s ease-in-out;
@@ -34,7 +34,6 @@
     .cube-spinner {
       display: flex;
       gap: 10px;
-      animation: rotateSpinner 1.8s linear infinite;
     }
 
     .cube-spinner div {

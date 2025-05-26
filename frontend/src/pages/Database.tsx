@@ -16,6 +16,7 @@ export default function Databases() {
     const itemsPerPage = 4;
     const token = localStorage.getItem("token");
     const [notifications, setNotifications] = useState<{ id: number; type: "error" | "success"; message: string }[]>([]);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         fetchDatabases();
@@ -34,6 +35,7 @@ export default function Databases() {
     const fetchDatabases = async () => {
         if (!token) return;
         try {
+            setLoading(true);
             const response = await fetch(`${API_URL}/databases`, {
                 method: "GET",
                 headers: {
@@ -45,12 +47,14 @@ export default function Databases() {
             if (response.ok) {
                 const data = await response.json();
                 setDatabases(data);
-
             }
         } catch (error) {
             addNotification("error", `Ошибка загрузки баз данных: ${error}`);
+        } finally {
+            setLoading(false);
         }
     };
+
 
     const createDatabase = async () => {
         if (!dbName.trim()) {
@@ -105,26 +109,37 @@ export default function Databases() {
                 <h1 className="text-4xl font-bold mb-10 flex items-center gap-2 text-purple-100 drop-shadow-lg tracking-wide">
                     Ваши базы данных
                     <DatabaseZap
-                        className="ml-1 w-14 h-14 text-purple-300 transition-all duration-300 ease-in-out transform hover:scale-102 hover:text-purple-200 hover:drop-shadow-lg"
+                        className="ml-1 w-20 h-20 md:w-14 md:h-14 text-purple-300 transition-all duration-300 ease-in-out transform hover:scale-102 hover:text-purple-200 hover:drop-shadow-lg"
                     />
 
                 </h1>
 
-                {databases.length === 0 ? (
+                {loading ? (
+                    <ul className="space-y-4 mb-6 w-full max-w-md animate-pulse">
+                        {[...Array(4)].map((_, i) => (
+                            <li
+                                key={i}
+                                className="h-16 bg-gradient-to-r from-purple-600/10 to-white/5 rounded-lg w-full shadow"
+                            />
+                        ))}
+                    </ul>
+                ) : databases.length === 0 ? (
                     <p className="text-xl text-gray-300 mb-10">У вас пока нет баз данных.</p>
                 ) : (
-                    <>
-                        <ul className="space-y-4 mb-6">
-                            {displayedDatabases.map((db) => (
-                                <li key={db.db_name}
-                                    className="bg-white/5 backdrop-blur border border-white/13 text-white px-6 py-3 rounded-lg shadow-md text-lg font-semibold cursor-pointer hover:bg-white/10 transition-all"
-                                    onClick={() => enterDB(db.db_name)}>
-                                    {db.db_name}
-                                </li>
-                            ))}
-                        </ul>
-                    </>
+                    <ul className="space-y-4 mb-6">
+                        {displayedDatabases.map((db) => (
+                            <li
+                                key={db.db_name}
+                                className="bg-white/5 backdrop-blur border border-white/13 text-white px-6 py-3 rounded-lg shadow-md text-lg font-semibold cursor-pointer hover:bg-white/10 transition-all"
+                                onClick={() => enterDB(db.db_name)}
+                            >
+                                {db.db_name}
+                            </li>
+                        ))}
+                    </ul>
                 )}
+
+
 
                 <button
                     onClick={() => setShowInput(true)}

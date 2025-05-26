@@ -18,6 +18,8 @@ export default function Chat() {
     const totalPages = Math.ceil(history.length / itemsPerPage);
     const [isLoading, setIsLoading] = useState(false);
     const [isClearing, setIsClearing] = useState(false);
+    const [isFetchingHistory, setIsFetchingHistory] = useState(true);
+
 
     const [copied, setCopied] = useState(false);
 
@@ -42,6 +44,7 @@ export default function Chat() {
 
     const fetchHistory = async () => {
         try {
+            setIsFetchingHistory(true); // ← добавлено
             const token = localStorage.getItem("token");
             const res = await fetch(`${API_URL}/database/${db_name}/chat`, {
                 headers: {
@@ -64,8 +67,11 @@ export default function Chat() {
             setHistory(data.reverse());
         } catch (error) {
             addNotification("error", `Ошибка загрузки истории: ${error}`);
+        } finally {
+            setIsFetchingHistory(false); // ← добавлено
         }
     };
+
 
     const handleTranslate = async () => {
         try {
@@ -230,7 +236,15 @@ export default function Chat() {
                     </div>
                 </div>
                 {/* История запросов */}
-                {history.length > 0 && (
+                {isFetchingHistory ? (
+                    <div className="mt-16 w-full flex justify-center">
+                        <div className="w-full max-w-xl flex flex-col gap-4 px-4">
+                            {[...Array(itemsPerPage)].map((_, index) => (
+                                <div key={index} className="w-full h-24 rounded-xl bg-white/10 animate-pulse" />
+                            ))}
+                        </div>
+                    </div>
+                ) : history.length > 0 && (
                     <div className="mt-16 w-full flex justify-center">
                         <div className="w-full max-w-xl flex flex-col gap-2 px-4">
 

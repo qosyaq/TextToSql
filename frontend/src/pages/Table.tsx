@@ -28,6 +28,8 @@ export default function TablesPage() {
 
     const [notifications, setNotifications] = useState<{ id: number; type: "error" | "success"; message: string }[]>([]);
 
+    const [loading, setLoading] = useState(true);
+    const [columnsLoading, setColumnsLoading] = useState(false);
 
     const token = localStorage.getItem("token");
     const navigate = useNavigate();
@@ -71,6 +73,7 @@ export default function TablesPage() {
     const fetchTables = async () => {
         if (!token || !db_name) return;
         try {
+            setLoading(true);
             const response = await fetch(`${API_URL}/database/${db_name}/tables`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
@@ -83,13 +86,17 @@ export default function TablesPage() {
             }
         } catch (err) {
             addNotification("error", "Ошибка загрузки таблиц");
+        } finally {
+            setLoading(false);
         }
     };
+
 
     // ====================== FETCH COLUMNS ======================
     const fetchColumns = async (tableName: string) => {
         if (!token || !db_name) return;
         try {
+            setColumnsLoading(true);
             const response = await fetch(
                 `${API_URL}/database/${db_name}/table/${tableName}/columns`,
                 {
@@ -98,14 +105,12 @@ export default function TablesPage() {
             );
             if (response.ok) {
                 const columnsData: Column[] = await response.json();
-
                 const tableObj: Table = {
                     table_name: tableName,
                     columns: columnsData || [],
                 };
                 setSelectedTable(tableObj);
-            }
-            else {
+            } else {
                 const data = await response.json();
                 if (data.detail && Array.isArray(data.detail)) {
                     const errorMessages = data.detail.map((err: any) => err.msg).join(", ");
@@ -116,8 +121,11 @@ export default function TablesPage() {
             }
         } catch (err) {
             addNotification("error", "Ошибка соединения при загрузке колонок");
+        } finally {
+            setColumnsLoading(false);
         }
     };
+
 
     // ====================== ADD TABLE ======================
     const addTable = async () => {
@@ -308,15 +316,17 @@ export default function TablesPage() {
 
             <main className="bg-gradient-to-b from-purple-800 to-gray-900 flex-grow text-white p-6 flex flex-col items-center">
 
-                <div className="flex items-center flex-wrap gap-4 mb-8 justify-between">
-                    <h1 className="text-3xl md:text-4xl font-bold text-purple-100 tracking-wide drop-shadow-md">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 text-center md:text-left gap-4">
+                    {/* Заголовок */}
+                    <h1 className="text-3xl md:text-4xl font-bold text-purple-100 tracking-wide drop-shadow-md flex justify-center md:justify-start items-center">
                         Таблицы в{" "}
-                        <span className="text-4xl font-bold bg-gradient-to-br from-purple-500 to-blue-300  backdrop-blur text-purple-900 px-3 rounded-xl shadow-inner">
+                        <span className="ml-2 text-4xl font-bold bg-gradient-to-br from-purple-500 to-blue-300 backdrop-blur text-purple-900 px-3 rounded-xl shadow-inner">
                             {db_name}
                         </span>
                     </h1>
 
-                    <div className="flex gap-3">
+                    {/* Кнопки */}
+                    <div className="flex justify-center md:justify-end gap-3">
                         <Link
                             to={`/database/${db_name}/chat`}
                             className="p-3 rounded-full bg-gradient-to-br from-green-600 to-blue-400 text-white hover:bg-white hover:text-green-200 hover:scale-101 shadow-lg transition-all duration-300 hover:opacity-80"
@@ -327,7 +337,7 @@ export default function TablesPage() {
 
                         <button
                             onClick={() => setIsConfirmModalOpen(true)}
-                            className="p-3 rounded-full bg-gradient-to-br from-orange-500 to-red-400 text-white hover:bg-white hover:text-red-200 shadow-lg hover:scale-101  transition-all duration-300 cursor-pointer hover:opacity-80"
+                            className="p-3 rounded-full bg-gradient-to-br from-orange-500 to-red-400 text-white hover:bg-white hover:text-red-200 shadow-lg hover:scale-101 transition-all duration-300 cursor-pointer hover:opacity-80"
                             title="Удалить базу данных"
                         >
                             <Trash2 size={26} />
@@ -336,8 +346,18 @@ export default function TablesPage() {
                 </div>
 
 
+
                 {/* Список таблиц */}
-                {tables.length === 0 ? (
+                {loading ? (
+                    <ul className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl animate-pulse">
+                        {Array.from({ length: itemsPerPage }).map((_, i) => (
+                            <li
+                                key={i}
+                                className="h-20 bg-white/10 rounded-md w-full"
+                            ></li>
+                        ))}
+                    </ul>
+                ) : tables.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-[50vh] text-gray-300">
                         <p className="text-xl mb-4 italic text-purple-200">Таблиц пока нет.</p>
                         <div className="flex items-center space-x-3">
@@ -538,7 +558,11 @@ export default function TablesPage() {
                                 <div className="flex text-white">
                                     <div className="flex-1 overflow-y-auto max-h-100 pr-3 scrollbar-thin scrollbar-thumb-white scrollbar-track-transparent">
                                         <ul className="space-y-2 mb-4">
-                                            {selectedTable.columns.map((col) => (
+                                            {columnsLoading ? (
+                                                Array.from({ length: 4 }).map((_, i) => (
+                                                    <li key={i} className="h-10 bg-purple-400/10 rounded w-full animate-pulse" />
+                                                ))
+                                            ) : selectedTable.columns.map((col) => (
                                                 <li
                                                     key={col.column_name}
                                                     className="p-2 border border-white/40 rounded-md flex justify-between items-center"

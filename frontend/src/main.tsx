@@ -39,5 +39,5 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
 const splash = document.getElementById("splash-screen");
 if (splash) {
   splash.classList.add("opacity-0");
-  setTimeout(() => splash.remove(), 500); // 400–600 мс оптимально
+  setTimeout(() => splash.remove(), 900);
 }

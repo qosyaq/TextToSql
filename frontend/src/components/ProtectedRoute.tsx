@@ -1,4 +1,3 @@
-// src/components/ProtectedRoute.tsx
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 
@@ -22,11 +21,7 @@ export default function ProtectedRoute() {
                     },
                 });
 
-                if (response.ok) {
-                    setValid(true);
-                } else {
-                    setValid(false);
-                }
+                setValid(response.ok);
             } catch {
                 setValid(false);
             }
@@ -35,7 +30,18 @@ export default function ProtectedRoute() {
         checkToken();
     }, []);
 
-    if (valid === null) return <div className="text-center mt-10 text-white">Загрузка...</div>;
+    // Удаляем splash, как только проверка завершилась
+    useEffect(() => {
+        if (valid !== null) {
+            const splash = document.getElementById("splash-screen");
+            if (splash) {
+                splash.classList.add("opacity-0");
+                setTimeout(() => splash.remove(), 400);
+            }
+        }
+    }, [valid]);
+
+    if (valid === null) return null;
 
     if (!valid) {
         return (

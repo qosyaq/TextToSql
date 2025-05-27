@@ -358,15 +358,16 @@ export default function TablesPage() {
                         ))}
                     </ul>
                 ) : tables.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-[50vh] text-gray-300">
-                        <p className="text-xl mb-4 italic text-purple-200">Таблиц пока нет.</p>
+                    <div className="flex flex-col items-center justify-center h-[50vh] text-gray-300 text-center">
+                        <p className="text-xl mb-4 text-purple-200">На данный момент отсутствуют таблицы.</p>
+                        <p className="text-lg mb-4 text-purple-200 opacity-90">Нужно ли создать их?</p>
                         <div className="flex items-center space-x-3">
                             {!showInput ? (
                                 <button
                                     onClick={() => setShowInput(true)}
-                                    className={`mt-4 flex items-center justify-center gap-2 px-6 py-2 rounded-xl 
+                                    className={`mt-1 flex items-center justify-center gap-2 px-6 py-2 rounded-xl 
        bg-gradient-to-r from-blue-500 to-purple-600
-        text-white shadow-xl hover:from-blue-600 hover:to-purple-500 transition-all duration-300 cursor-pointer hover:scale-102`}
+        text-white shadow-xl hover:from-blue-600 hover:to-purple-500 transition-all duration-300 cursor-pointer hover:scale-102 opacity-95`}
                                 >
                                     <span className="font-medium text-xl tracking-wide cursor-pointer">Создать</span>
                                 </button>

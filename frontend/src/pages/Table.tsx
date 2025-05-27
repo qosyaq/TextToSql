@@ -349,7 +349,7 @@ export default function TablesPage() {
 
                 {/* Список таблиц */}
                 {loading ? (
-                    <ul className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl animate-pulse">
+                    <ul className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl animate-pulse mt-8">
                         {Array.from({ length: itemsPerPage }).map((_, i) => (
                             <li
                                 key={i}
@@ -393,7 +393,7 @@ export default function TablesPage() {
 
                 ) : (
                     <>
-                        <ul className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl">
+                        <ul className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl mt-8">
                             {displayedTables.map((table) => (
                                 <li
                                     key={table.table_name}

@@ -364,9 +364,11 @@ export default function TablesPage() {
                             {!showInput ? (
                                 <button
                                     onClick={() => setShowInput(true)}
-                                    className="bg-gradient-to-br from-purple-500 to-blue-300  text-purple-900 px-4 py-2 rounded-lg transition-all text-2xl font-bold hover:scale-103 hover:text-purple-900/85 cursor-pointer"
+                                    className={`mt-4 flex items-center justify-center gap-2 px-6 py-2 rounded-xl 
+       bg-gradient-to-r from-blue-500 to-purple-600
+        text-white shadow-xl hover:from-blue-600 hover:to-purple-500 transition-all duration-300 cursor-pointer hover:scale-102`}
                                 >
-                                    Создать
+                                    <span className="font-medium text-xl tracking-wide cursor-pointer">Создать</span>
                                 </button>
                             ) : (
                                 <>

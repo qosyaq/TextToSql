@@ -316,7 +316,7 @@ export default function TablesPage() {
 
             <main className="bg-gradient-to-b from-purple-800 to-gray-900 flex-grow text-white p-6 flex flex-col items-center">
 
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 text-center md:text-left gap-4">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between text-center md:text-left gap-4">
                     {/* Заголовок */}
                     <h1 className="text-3xl md:text-4xl font-bold text-purple-100 tracking-wide drop-shadow-md flex justify-center md:justify-start items-center">
                         Таблицы в{" "}
@@ -358,7 +358,7 @@ export default function TablesPage() {
                         ))}
                     </ul>
                 ) : tables.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center h-[50vh] text-gray-300 text-center">
+                    <div className="flex flex-col items-center justify-center h-[40vh] text-gray-300 text-center">
                         <p className="text-xl mb-4 text-purple-200">На данный момент отсутствуют таблицы.</p>
                         <p className="text-lg mb-4 text-purple-200 opacity-90">Нужно ли создать их?</p>
                         <div className="flex items-center space-x-3">

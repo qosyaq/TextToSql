@@ -13,6 +13,11 @@ import Chat from "./pages/Chat";
 import Profile from "./pages/Profile.tsx";
 import PageTitleSetter from "./components/PageTitleSetter";
 
+const splash = document.getElementById("splash-screen");
+if (splash) {
+  splash.classList.add("opacity-0");
+  setTimeout(() => splash.remove(), 900);
+}
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
@@ -36,8 +41,3 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     </BrowserRouter>
   </React.StrictMode>
 );
-const splash = document.getElementById("splash-screen");
-if (splash) {
-  splash.classList.add("opacity-0");
-  setTimeout(() => splash.remove(), 900);
-}

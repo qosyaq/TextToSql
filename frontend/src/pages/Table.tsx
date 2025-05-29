@@ -318,9 +318,9 @@ export default function TablesPage() {
 
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between text-center md:text-left gap-4">
                     {/* Заголовок */}
-                    <h1 className="text-3xl md:text-4xl font-bold text-purple-100 tracking-wide drop-shadow-md flex justify-center md:justify-start items-center">
-                        Таблицы в{" "}
-                        <span className="ml-2 text-4xl font-bold bg-gradient-to-br from-purple-500 to-blue-300 backdrop-blur text-purple-900 px-3 rounded-xl shadow-inner">
+                    <h1 className="flex flex-row flex-wrap justify-center md:justify-start items-center text-3xl md:text-4xl font-bold text-purple-100 tracking-wide drop-shadow-md">
+                        Таблицы в
+                        <span className="md:w-auto text-center md:text-left mt-2 md:mt-0 ml-0 md:ml-2 text-4xl font-bold bg-gradient-to-br from-purple-500 to-blue-300 backdrop-blur text-purple-900 p-1.5 md:py-2 px-3 md:px-5 rounded-xl shadow-inner">
                             {db_name}
                         </span>
                     </h1>

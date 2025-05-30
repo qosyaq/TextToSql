@@ -139,7 +139,7 @@ async def find_sql_in_pinecone(natural_query: str, schema: dict, db_type: str, t
         best_sql = best_hit["fields"]["sql"]
         best_score = best_hit["_score"]
 
-        if best_score < 0.87:
+        if best_score < 0.90:
             print(best_score)
             return None
 

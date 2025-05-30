@@ -87,7 +87,6 @@ export default function Chat() {
             });
             const data = await res.json();
             setResponse(data.sql);
-            setInput("");
             await fetchHistory();
             setCurrentPage(1);
 

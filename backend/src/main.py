@@ -11,8 +11,8 @@ load_dotenv()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await delete_tables()
-    print("Database is empty")
+    # await delete_tables()
+    # print("Database is empty")
     await create_tables()
     print("Database is ready")
     yield

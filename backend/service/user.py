@@ -83,11 +83,8 @@ async def verify_token(token: str) -> UserOrm | None:
 
 
 async def register(data: LoginRequest) -> User:
-    if await is_email_exists(data):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="This email is already in use"
-        )
+    await is_email_exists(data)
+
     async with new_session() as session:
         user_dict = {
             "email": data.email,
@@ -129,14 +126,25 @@ async def find_user(user: LoginRequest) -> bool:
         return bcrypt.checkpw(user.password.encode('utf-8'), user_data.hashed_password.encode('utf-8'))
 
 
-async def is_email_exists(user: LoginRequest) -> bool:
+async def is_email_exists(user: LoginRequest):
     async with new_session() as session:
         query = select(UserOrm).where(UserOrm.email == user.email)
         result = await session.execute(query)
-        user_model = result.scalars().first()
-        if user_model is None:
-            return False
-        return True
+        user_model: UserOrm = result.scalars().first()
+
+        if user_model and not user_model.is_verified:
+            await session.execute(
+                delete(EmailVerificationTokenOrm).where(EmailVerificationTokenOrm.user_id == user_model.id)
+            )
+            await session.execute(
+                delete(UserOrm).where(UserOrm.id == user_model.id)
+            )
+            await session.commit()
+        elif user_model:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="This email is already in use"
+            )
 
 
 async def login(data: LoginRequest) -> dict | None:

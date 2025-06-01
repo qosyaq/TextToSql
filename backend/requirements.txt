@@ -16,6 +16,3 @@ sqlglot
 pydantic[email]
 nest_asyncio
 httpx
-re
-os
-secrets

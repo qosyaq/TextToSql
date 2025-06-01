@@ -1,17 +1,23 @@
-import React from "react";
+// src/index.tsx (или main.tsx — в зависимости от вашего проекта)
 import ReactDOM from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+
 import App from "./pages/App";
 import Register from "./pages/Register";
-import Login from "./pages/Login.tsx";
+import Login from "./pages/Login";
 import Database from "./pages/Database";
-import TablesPage from "./pages/Table.tsx";
-import "./index.css";
-import ProtectedRoute from "./components/ProtectedRoute.tsx";
-import NotFound from "./pages/NotFound";
+import TablesPage from "./pages/Table";
 import Chat from "./pages/Chat";
-import Profile from "./pages/Profile.tsx";
+import Profile from "./pages/Profile";
+import NotFound from "./pages/NotFound";
+
+import VerifyEmail from "./pages/VerifyEmail";
+
+import ProtectedRoute from "./components/ProtectedRoute";
+import OAuthCallback from "./pages/OAuthCallback";
+
 import PageTitleSetter from "./components/PageTitleSetter";
+import "./index.css";
 
 const splash = document.getElementById("splash-screen");
 if (splash) {
@@ -20,24 +26,26 @@ if (splash) {
 }
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
-  <React.StrictMode>
-    <BrowserRouter>
-      <PageTitleSetter />
-      <Routes>
-        <Route path="/" element={<App />} />
-        <Route path="/user/register" element={<Register />} />
-        <Route path="/user/login" element={<Login />} />
+  <BrowserRouter>
+    <PageTitleSetter />
 
-        <Route element={<ProtectedRoute />}>
-          <Route path="/databases" element={<Database />} />
-          <Route path="/database/:db_name/tables" element={<TablesPage />} />
-          <Route path="/database/:db_name/chat" element={<Chat />} />
-          <Route path="/user/profile" element={<Profile />} />
-        </Route>
+    <Routes>
+      <Route path="/" element={<App />} />
+      <Route path="/user/register" element={<Register />} />
+      <Route path="/user/login" element={<Login />} />
 
-        <Route path="*" element={<NotFound />} /> {/* Страница 404 */}
+      <Route path="/user/verify-email" element={<VerifyEmail />} />
+      <Route path="/oauth/:provider/callback" element={<OAuthCallback />} />
 
-      </Routes>
-    </BrowserRouter>
-  </React.StrictMode>
+      <Route element={<ProtectedRoute />}>
+        <Route path="/databases" element={<Database />} />
+        <Route path="/database/:db_name/tables" element={<TablesPage />} />
+        <Route path="/database/:db_name/chat" element={<Chat />} />
+        <Route path="/user/profile" element={<Profile />} />
+      </Route>
+
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  </BrowserRouter>
 );
+

@@ -3,6 +3,8 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { DatabaseZap } from "lucide-react";
 import { motion } from "framer-motion";
+import { useLocation } from "react-router-dom";
+import { Loader2 } from "lucide-react";
 
 export default function Databases() {
     const API_URL = import.meta.env.VITE_API_URL;
@@ -14,10 +16,15 @@ export default function Databases() {
     const [searchModalOpen, setSearchModalOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const itemsPerPage = 4;
+    const [isCreating, setIsCreating] = useState(false);
+    const location = useLocation();
+    const [importDump, setImportDump] = useState(false);
+    const [file, setFile] = useState<File | null>(null);
+
     const token = localStorage.getItem("token");
     const [notifications, setNotifications] = useState<{ id: number; type: "error" | "success"; message: string }[]>([]);
     const [loading, setLoading] = useState(true);
-
+    const successFromState = (location.state as any)?.success || "";
     useEffect(() => {
         fetchDatabases();
     }, []);
@@ -26,11 +33,16 @@ export default function Databases() {
         const id = Date.now();
         setNotifications((prev) => [...prev, { id, type, message }]);
 
-        // Удаляем уведомление через 4 секунды
         setTimeout(() => {
             setNotifications((prev) => prev.filter((notif) => notif.id !== id));
         }, 4000);
     };
+
+    useEffect(() => {
+        if (successFromState) {
+            addNotification("success", successFromState);
+        }
+    }, [successFromState]);
 
     const fetchDatabases = async () => {
         if (!token) return;
@@ -63,13 +75,19 @@ export default function Databases() {
         }
 
         try {
+            setIsCreating(true);
+            const formData = new FormData();
+            formData.append("db_name", dbName);
+            formData.append("db_type", dbType);
+            if (file) {
+                formData.append("file", file);
+            }
             const response = await fetch(`${API_URL}/database`, {
                 method: "POST",
                 headers: {
                     "Authorization": `Bearer ${token}`,
-                    "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ db_name: dbName, db_type: dbType }),
+                body: formData,
             });
 
             const data = await response.json();
@@ -90,6 +108,10 @@ export default function Databases() {
             addNotification("success", "База данных успешно создана.");
         } catch (error: any) {
             addNotification("error", `Ошибка создания базы данных: ${error.message}`);
+        } finally {
+            setIsCreating(false);
+            setFile(null);
+            setImportDump(false);
         }
     };
 
@@ -206,6 +228,54 @@ export default function Databases() {
                                 <option value="sqlite" className="bg-gray-800 hover:bg-gray-800/20">SQLite</option>
                                 <option value="mssql" className="bg-gray-800 hover:bg-gray-800/20">SQL Server</option>
                             </select>
+
+                            <div className="mb-5">
+                                <div className="flex items-center justify-between mb-3">
+                                    <span className="text-sm select-none">Импортировать SQL-dump?</span>
+
+                                    {/* toggle */}
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            setImportDump(p => !p);
+                                            if (importDump) setFile(null);      // выключаем → очищаем файл
+                                        }}
+                                        className={`relative inline-flex h-6 w-11 items-center rounded-full
+              transition-colors duration-300 cursor-pointer
+              ${importDump ? "bg-violet-600" : "bg-gray-600/40"}`}
+                                    >
+                                        <span
+                                            className={`inline-block h-5 w-5 transform rounded-full bg-white
+                transition-transform duration-300
+                ${importDump ? "translate-x-5" : "translate-x-1"}`}
+                                        />
+                                    </button>
+                                </div>
+
+                                {importDump && (
+                                    <label className="flex cursor-pointer items-center justify-between gap-4
+                    rounded-lg border border-white/30 bg-white/1 px-4 py-3
+                    text-sm backdrop-blur hover:bg-white/2 mb-4">
+                                        <span className="truncate">
+                                            {file ? file.name : "Выбрать .sql файл"}
+                                        </span>
+
+                                        <span className="rounded-md bg-violet-600 px-3 py-1 text-xs font-semibold
+                     uppercase tracking-wide hover:bg-violet-700">
+                                            Browse
+                                        </span>
+
+                                        <input
+                                            type="file"
+                                            accept=".sql"
+                                            onChange={(e) => setFile(e.target.files?.[0] || null)}
+                                            className="hidden"
+                                        />
+                                    </label>
+                                )}
+
+                            </div>
+
 
 
                             <button

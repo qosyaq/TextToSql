@@ -1,8 +1,10 @@
-from fastapi import APIRouter, status, HTTPException, security, Depends
+from fastapi import APIRouter, status, security, Depends
 
-from model.user import LoginRequest, User, Password
+from model.user import LoginRequest, User, Password, VerifyEmailRequest, ResendVerificationRequest, OAuthRequest
 
 from service import user as user_service
+
+
 
 router = APIRouter(prefix="/user", tags=["User"])
 
@@ -21,9 +23,31 @@ async def register(user: LoginRequest) -> User:
     return user_data
 
 
+@router.post("/verify-email", status_code=status.HTTP_200_OK)
+async def verify_email(payload: VerifyEmailRequest):
+    await user_service.verify_email_code(email=payload.email, code=payload.code)
+    return {"status": "ok", "detail": "Email успешно подтверждён"}
+
+
+@router.post("/resend-verification")
+async def resend_verification(payload: ResendVerificationRequest) -> dict:
+    await user_service.resend_verification_code(email=payload.email)
+    return {"status": "ok", "detail": "Новый код отправлен на вашу почту"}
+
+
+@router.post("/oauth/google")
+async def google_login(payload: OAuthRequest):
+    return await user_service.oauth_login("google", payload.oauth_token)
+
+
+@router.post("/oauth/microsoft")
+async def microsoft_login(payload: OAuthRequest):
+    return await user_service.oauth_login("microsoft", payload.oauth_token)
+
+
 @router.delete("/delete", status_code=status.HTTP_200_OK)
 async def delete(password: Password, token: str = Depends(oauth2schema)) -> dict:
-    result = await user_service.delete(password, token)
+    result = await user_service.delete_account(password, token)
     return result
 
 

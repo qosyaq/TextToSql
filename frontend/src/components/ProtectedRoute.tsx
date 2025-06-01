@@ -7,7 +7,11 @@ export default function ProtectedRoute() {
     const API_URL = import.meta.env.VITE_API_URL;
 
     useEffect(() => {
+        let didRun = false;
         const checkToken = async () => {
+            if (didRun) return;
+            didRun = true;
+
             const token = localStorage.getItem("token");
             if (!token) {
                 setValid(false);
@@ -16,11 +20,8 @@ export default function ProtectedRoute() {
 
             try {
                 const response = await fetch(`${API_URL}/user/me`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
+                    headers: { Authorization: `Bearer ${token}` },
                 });
-
                 setValid(response.ok);
             } catch {
                 setValid(false);

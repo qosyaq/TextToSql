@@ -4,7 +4,7 @@ import LoginHeader from "../components/LoginHeader";
 import LoginFooter from "../components/Footer";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { useAuthRedirect } from "../hooks/useAuthRedirect"
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function Login() {
     useAuthRedirect();
@@ -21,7 +21,6 @@ export default function Login() {
     const location = useLocation();
 
     const navigate = useNavigate();
-
 
     useEffect(() => {
         if (notification) {
@@ -57,11 +56,21 @@ export default function Login() {
             const data = await response.json();
             if (response.ok) {
                 localStorage.setItem("token", data.token);
-                navigate("/databases");
-                setTimeout(() => {
-                    window.location.href = "/databases";
-                }, 2000);
-                setNotification({ type: "success", message: "Успешный вход! Перенаправление..." });
+                navigate("/databases", {
+                    state: {
+                        email: formData.email,
+                        success: "Успешный вход! Добро пожаловать!",
+                    },
+                });
+            } else if (response.status === 403 && data.detail?.toLowerCase().includes("not verified")) {
+                setLoading(false);
+                navigate("/user/verify-email", {
+                    state: {
+                        email: formData.email,
+                        error: "Email не подтверждён. Пожалуйста, введите код подтверждения.",
+                    },
+                });
+                return;
             } else {
                 if (data.detail && Array.isArray(data.detail)) {
                     const errorMessages = data.detail.map((err: any) => err.msg).join(", ");
@@ -77,29 +86,63 @@ export default function Login() {
         setLoading(false);
     };
 
+    const GOOGLE_AUTH_URL =
+        "https://accounts.google.com/o/oauth2/v2/auth" +
+        `?client_id=${import.meta.env.VITE_GOOGLE_CLIENT_ID}` +
+        `&redirect_uri=${import.meta.env.VITE_GOOGLE_REDIRECT_URI}` +
+        "&response_type=code" +
+        "&scope=openid%20email%20profile" +
+        "&state=login" +
+        "&prompt=consent";
+
+    const handleGoogleLogin = () => {
+        window.location.href = GOOGLE_AUTH_URL;   // просто редирект
+    };
+
+    const MS_AUTH_URL =
+        "https://login.microsoftonline.com/consumers/oauth2/v2.0/authorize" +
+        `?client_id=${import.meta.env.VITE_MICROSOFT_CLIENT_ID}` +
+        `&redirect_uri=${import.meta.env.VITE_MICROSOFT_REDIRECT_URI}` +
+        "&response_type=code" +
+        "&scope=openid%20email%20profile%20offline_access%20User.Read" +
+        "&state=login" +
+        "&prompt=select_account";
+
+    const handleMicrosoftLogin = () => {
+        window.location.href = MS_AUTH_URL;
+    };
+
     return (
         <div className="min-h-screen flex flex-col">
             <LoginHeader />
 
             <main className="flex-grow flex items-center justify-center bg-gradient-to-r from-purple-800 to-blue-400 p-4">
-                <div className="w-full max-w-md bg-white rounded-lg shadow-lg p-8 relative">
-                    {notification && (
-                        <motion.div
-                            initial={{ opacity: 0, y: -20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -20 }}
-                            transition={{ duration: 0.4, ease: "easeInOut" }}
-                            className={`absolute -top-18 left-1/2 -translate-x-1/2 px-4 py-2 rounded-md text-white text-sm shadow-lg ${notification.type === "success" ? "bg-green-600" : "bg-red-600"
-                                }`}
-                        >
-                            {notification.message}
-                        </motion.div>
-                    )}
+                <motion.div
+                    layout
+                    transition={{ layout: { duration: 0.6, ease: "easeInOut" } }}
+                    className="w-full max-w-md bg-white rounded-lg shadow-lg p-8 relative"
+                >
                     <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">Вход</h2>
+                    <AnimatePresence mode="wait">
+                        {notification && (
+                            <motion.div
+                                key={notification.message}
+                                layout="position" // <--- добавлено
+                                initial={{ opacity: 0, y: -20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10, height: 0, paddingTop: 0, paddingBottom: 0, marginBottom: 0 }}
+                                transition={{ duration: 0.3, ease: "easeInOut" }}
+                                className={`mb-4 w-full text-center px-4 py-2 rounded-md text-white text-sm shadow-lg break-words whitespace-pre-wrap ${notification.type === "success" ? "bg-green-600" : "bg-red-600"
+                                    }`}
+                            >
+                                {notification.message}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
 
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
-                            <label className="block text-gray-700 font-semibold">Email</label>
+                            <label className="block text-gray-700 font-semibold mb-1">Email</label>
                             <input
                                 type="email"
                                 name="email"
@@ -112,7 +155,7 @@ export default function Login() {
                         </div>
 
                         <div>
-                            <label className="block text-gray-700 font-semibold">Пароль</label>
+                            <label className="block text-gray-700 font-semibold mb-1">Пароль</label>
                             <input
                                 type="password"
                                 name="password"
@@ -143,7 +186,26 @@ export default function Login() {
                             Зарегистрироваться
                         </Link>
                     </p>
-                </div>
+
+                    <div className="flex flex-col space-y-3 mt-6">
+                        <button
+                            onClick={handleGoogleLogin}
+                            className="w-full flex items-center justify-center gap-2 border border-gray-300 py-2 rounded-lg hover:bg-gray-100 transition cursor-pointer"
+                        >
+                            <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="w-5 h-5" />
+                            Войти через Google
+                        </button>
+                        <button
+                            onClick={handleMicrosoftLogin}
+                            className="w-full flex items-center justify-center gap-2 border border-gray-300 py-2 rounded-lg hover:bg-gray-100 transition cursor-pointer"
+                        >
+                            <img src="https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/microsoft.svg"
+                                alt="Microsoft logo"
+                                className="w-5 h-5" />
+                            Войти через Microsoft
+                        </button>
+                    </div>
+                </motion.div>
             </main>
             <LoginFooter />
         </div>

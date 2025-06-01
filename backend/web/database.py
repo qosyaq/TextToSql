@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, status, Query
+from fastapi import APIRouter, Depends, status, Query, Form, File, UploadFile
 from fastapi.security import OAuth2PasswordBearer
 from service import database
 from model.database import Database
 from typing import Optional
+from pydantic import constr
 
 router = APIRouter(prefix="/database", tags=["database"])
 
@@ -19,9 +20,14 @@ async def get_all_databases(page: Optional[int] = Query(None, ge=1), page_size: 
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
-async def create_database(data: Database, token: str = Depends(oauth2_scheme)) -> Database | None:
-    database_model: Database = await database.create_database(token, data)
-    return database_model
+async def create_database(
+    db_name: constr(min_length=3) = Form(...),
+    db_type: constr(pattern="^(postgresql|mysql|sqlite|mssql|oracle)$") = Form(...),
+    file: UploadFile = File(None),
+    token: str = Depends(oauth2_scheme)
+) -> Database | None:
+    data = Database(db_name=db_name, db_type=db_type)
+    return await database.create_database(token, data, file)
 
 
 @router.delete("/{db_name}")

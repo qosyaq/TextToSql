@@ -1,4 +1,4 @@
-from sqlalchemy import ForeignKey, UniqueConstraint, DateTime, func, Text, String
+from sqlalchemy import ForeignKey, UniqueConstraint, DateTime, func, Text, String, Boolean
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from sqlalchemy.orm import Mapped, mapped_column, declarative_base, relationship
 
@@ -68,10 +68,27 @@ class UserOrm(Base):
     __tablename__ = "users"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    email: Mapped[str]
-    hashed_password: Mapped[str]
+    email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False)
+    hashed_password: Mapped[str | None] = mapped_column(nullable=True)
+    is_verified: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    is_oauth: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    oauth_provider: Mapped[str | None] = mapped_column(String(50), nullable=True)
     created_at: Mapped[DateTime] = mapped_column(DateTime, default=func.now())
-    databases: Mapped[list[DatabaseOrm] | None] = relationship('DatabaseOrm', back_populates='user', cascade="all, delete")
+
+    databases: Mapped[list[DatabaseOrm] | None] = relationship('DatabaseOrm', back_populates='user',
+                                                               cascade="all, delete")
+
+
+class EmailVerificationTokenOrm(Base):
+    __tablename__ = "email_verification_tokens"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    token: Mapped[str] = mapped_column(String(6), unique=True, nullable=False)
+    expires_at: Mapped[DateTime] = mapped_column(DateTime, nullable=False)
+    created_at: Mapped[DateTime] = mapped_column(DateTime, default=func.now())
+
+    user: Mapped["UserOrm"] = relationship("UserOrm", backref="verification_tokens")
 
 
 class ChatHistoryOrm(Base):

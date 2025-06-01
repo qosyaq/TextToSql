@@ -280,9 +280,20 @@ export default function Databases() {
 
                             <button
                                 onClick={createDatabase}
-                                className="w-full bg-gradient-to-br from-blue-400 to-purple-700 text-white px-4 py-2 rounded-md transition-all hover:text-purple-100 hover:scale-101 cursor-pointer"
+                                disabled={isCreating}
+                                className={`w-full flex items-center justify-center gap-2
+              bg-gradient-to-br from-blue-400 to-purple-700 text-white
+              px-4 py-2 rounded-md transition-all
+              ${isCreating ? "opacity-70 cursor-not-allowed" : "hover:text-purple-100 hover:scale-101"}`}
                             >
-                                Создать
+                                {isCreating ? (
+                                    <>
+                                        <Loader2 className="h-4 w-4 animate-spin" />  {/* спиннер */}
+                                        Создаём...
+                                    </>
+                                ) : (
+                                    "Создать"
+                                )}
                             </button>
                         </div>
                     </div>

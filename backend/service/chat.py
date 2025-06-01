@@ -26,17 +26,6 @@ dialect_map = {
 }
 
 
-async def build_id_text(query: str, tables: list[str], columns: list[str], db_type: str) -> str:
-    tables_part = ",".join(tables) if tables else "NO_SCHEMA"
-    columns_part = ",".join(columns) if columns else "NO_COLS"
-    return (
-        f"DB:{db_type.lower()}|"
-        f"Q:{query}|"
-        f"T:{tables_part}|"
-        f"C:{columns_part}"
-    )
-
-
 async def generate_id(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()[:32]
 
@@ -142,7 +131,8 @@ async def find_sql_in_pinecone(natural_query: str, schema: dict, db_type: str, t
         return None
 
     best_hit = max(response["result"]["hits"], key=lambda h: h["_score"])
-    if best_hit["_score"] < 0.92:
+    if best_hit["_score"] < 0.90:
+        print(f"{best_hit['_score']} < 0,90")
         return None
 
     best_sql = best_hit["fields"]["sql"]

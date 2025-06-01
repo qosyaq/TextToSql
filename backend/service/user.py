@@ -9,9 +9,6 @@ from fastapi import HTTPException, status
 import secrets
 from tools.email import send_email
 import httpx
-import logging
-logger = logging.getLogger("uvicorn.error")
-
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = os.getenv("ALGORITHM")
@@ -288,7 +285,6 @@ async def oauth_login(provider: str, oauth_token: str) -> dict:
                     "grant_type": "authorization_code",
                 },
             )
-            logger.warning("🔁 MS TOKEN_EXCHANGE %s %s", token_resp.status_code, token_resp.text)
             if token_resp.status_code != 200:
                 raise HTTPException(401, f"Microsoft token exchange failed: {token_resp.text}")
 
@@ -298,7 +294,6 @@ async def oauth_login(provider: str, oauth_token: str) -> dict:
                 MS_USERINFO_URL,
                 headers={"Authorization": f"Bearer {access_token}"},
             )
-            logger.warning("👤 MS USERINFO %s %s", user_resp.status_code, user_resp.text)
             if user_resp.status_code != 200:
                 raise HTTPException(401, f"Invalid Microsoft access token: {user_resp.text}")
 

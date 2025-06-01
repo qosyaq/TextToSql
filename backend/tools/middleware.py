@@ -10,7 +10,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="user/login")
 
 class AuthMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
-        public_paths = ["/user/login", "/user/register", "/docs", "/openapi.json"]
+        public_paths = ["/user/login", "/user/register", "/docs", "/openapi.json", "/user/verify-email", "/user/resend-verification", "/user/oauth/google", "/user/oauth/microsoft"]
 
         if request.method == "OPTIONS" or request.url.path in public_paths:
             return await call_next(request)

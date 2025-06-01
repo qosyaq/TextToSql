@@ -351,7 +351,7 @@ export default function TablesPage() {
       p-1.5
       md:py-2
       px-4
-      md:px-5
+      md:px-4
       rounded-xl
       shadow-inner
     "

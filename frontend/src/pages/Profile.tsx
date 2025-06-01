@@ -6,7 +6,14 @@ import { UserCircle } from "lucide-react";
 import { motion } from "framer-motion";
 
 export default function Profile() {
-    const [profile, setProfile] = useState<{ id: number; email: string; created_at: string } | null>(null);
+    const [profile, setProfile] = useState<{
+        id: number;
+        email: string;
+        created_at: string;
+        is_verified: boolean;
+        is_oauth: boolean;
+        auth_provider?: string;
+    } | null>(null);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [password, setPassword] = useState("");
     const [notifications, setNotifications] = useState<{ id: number; type: "error" | "success"; message: string }[]>([]);
@@ -96,9 +103,23 @@ export default function Profile() {
                 {profile ? (
                     <div className="bg-white/5 backdrop-blur border border-white/20 hover:scale-100.5 hover:bg-white/6 p-6 rounded-lg text-white shadow-lg w-full max-w-md text-left">
                         <p><span className="font-bold">ID:</span> {profile.id}</p>
-                        <p><span className="font-bold">Email:</span> {profile.email}</p>
+                        <p className="font-bold">Email: {profile.email}</p>
+                        {profile.is_oauth && (
+                            <p>
+                                <span className="font-bold">Провайдер:</span>{" "}
+                                <span className="capitalize">
+                                    {profile.auth_provider === "google"
+                                        ? "Google"
+                                        : profile.auth_provider === "github"
+                                            ? "GitHub"
+                                            : profile.auth_provider}
+                                </span>
+                            </p>
+                        )}
                         <p><span className="font-bold">Создан:</span> {new Date(profile.created_at).toLocaleString()}</p>
-
+                        {profile.is_verified && (
+                            <p className="font-bold text-green-400">Статус: (подтвержден ✓)</p>
+                        )}
                         <div className="mt-6 flex flex-col gap-4">
 
                             <button

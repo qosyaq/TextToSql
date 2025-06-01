@@ -5,7 +5,7 @@ import RegisterHeader from "../components/RegisterHeader";
 import RegisterFooter from "../components/Footer";
 import { AiOutlineLoading3Quarters } from "react-icons/ai"
 import { useAuthRedirect } from "../hooks/useAuthRedirect"
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 
 
 
@@ -45,9 +45,9 @@ export default function Register() {
 
         const data = await response.json();
         if (response.ok) {
-            setNotification({ type: "success", message: "Успешная регистрация! Перенаправление..." });
+            setNotification({ type: "success", message: "Успешная регистрация! Проверьте почту." });
             setTimeout(() => {
-                navigate("/user/login");
+                navigate(`/user/verify-email?email=${encodeURIComponent(formData.email)}`);
             }, 2000);
         } else {
             if (data.detail && Array.isArray(data.detail)) {
@@ -66,24 +66,32 @@ export default function Register() {
             <RegisterHeader />
 
             <main className="flex-grow flex items-center justify-center bg-gradient-to-r from-blue-800 to-purple-400 p-4">
-                <div className="w-full max-w-md bg-white rounded-lg shadow-lg p-8 relative">
-                    {notification && (
-                        <motion.div
-                            initial={{ opacity: 0, y: -20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -20 }}
-                            transition={{ duration: 0.4, ease: "easeInOut" }}
-                            className={`absolute -top-20 left-1/2 -translate-x-1/2 px-4 py-2 rounded-md text-white text-sm shadow-lg ${notification.type === "success" ? "bg-green-600" : "bg-red-600"
-                                }`}
-                        >
-                            {notification.message}
-                        </motion.div>
-                    )}
+                <motion.div
+                    layout
+                    transition={{ layout: { duration: 0.6, ease: "easeInOut" } }}
+                    className="w-full max-w-md bg-white rounded-lg shadow-lg p-8 relative"
+                >
                     <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">Регистрация</h2>
+                    <AnimatePresence mode="wait">
+                        {notification && (
+                            <motion.div
+                                key={notification.message}
+                                layout="position"
+                                initial={{ opacity: 0, y: -20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10, height: 0, paddingTop: 0, paddingBottom: 0, marginBottom: 0 }}
+                                transition={{ duration: 0.3, ease: "easeInOut" }}
+                                className={`mb-4 w-full text-center px-4 py-2 rounded-md text-white text-sm shadow-lg break-words whitespace-pre-wrap ${notification.type === "success" ? "bg-green-600" : "bg-red-600"
+                                    }`}
+                            >
+                                {notification.message}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
 
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <div>
-                            <label className="block text-gray-700 font-semibold">Email</label>
+                            <label className="block text-gray-700 font-semibold mb-1">Email</label>
                             <input
                                 type="email"
                                 name="email"
@@ -96,7 +104,7 @@ export default function Register() {
                         </div>
 
                         <div>
-                            <label className="block text-gray-700 font-semibold">Пароль</label>
+                            <label className="block text-gray-700 font-semibold mb-1">Пароль</label>
                             <input
                                 type="password"
                                 name="password"
@@ -127,7 +135,7 @@ export default function Register() {
                             Войти
                         </Link>
                     </p>
-                </div>
+                </motion.div>
             </main>
 
             <RegisterFooter />

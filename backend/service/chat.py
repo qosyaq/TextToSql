@@ -9,6 +9,7 @@ from fastapi import HTTPException, status
 import sqlglot
 import pinecone
 import hashlib
+import json
 import os
 from dotenv import load_dotenv
 from data.config import new_session, UserOrm, ChatHistoryOrm, DatabaseOrm
@@ -25,8 +26,24 @@ dialect_map = {
 }
 
 
+async def build_id_text(query: str, tables: list[str], columns: list[str], db_type: str) -> str:
+    tables_part = ",".join(tables) if tables else "NO_SCHEMA"
+    columns_part = ",".join(columns) if columns else "NO_COLS"
+    return (
+        f"DB:{db_type.lower()}|"
+        f"Q:{query}|"
+        f"T:{tables_part}|"
+        f"C:{columns_part}"
+    )
+
+
 async def generate_id(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()[:32]
+
+
+def calc_schema_id(tables, columns):
+    payload = json.dumps({"t": tables, "c": columns}, separators=(",", ":"))
+    return hashlib.sha256(payload.encode()).hexdigest()[:32]
 
 
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
@@ -53,100 +70,84 @@ async def validate_sql_syntax(sql_query: str, dialect: str) -> bool:
         return False
 
 
-def normalize_schema(schema: dict) -> str:
-    if not schema or "tables" not in schema:
-        return "NO_SCHEMA"
-
-    normalized_tables = []
-
-    for table_name in sorted(schema["tables"]):
-        columns = schema["tables"][table_name]
-
-        sorted_columns = sorted(
-            [(list(col.keys())[0].strip().lower(), list(col.values())[0].strip().lower()) for col in columns],
-            key=lambda x: x[0]
-        )
-
-        columns_str = ", ".join(f"{col_name.upper()} ({col_type.upper()})" for col_name, col_type in sorted_columns)
-
-        normalized_tables.append(f"{table_name.strip().lower()} : {columns_str}")
-
-    return "\n".join(normalized_tables)
-
-
 async def save_sql_to_pinecone(natural_query: str, sql_query: str, schema: dict, db_type: str):
-    schema_string = normalize_schema(schema)
-
-    combined_text = f"DB_TYPE: {db_type.upper()}\nQuery: {natural_query}\nSchema:\n{schema_string}"
+    tables = sorted(schema.get("tables", {}).keys())
+    columns = sorted(
+        f"{tbl}.{col_name}".lower()
+        for tbl, cols in schema.get("tables", {}).items()
+        for col in cols
+        for col_name in col.keys())
+    schema_id = calc_schema_id(tables, columns)
+    id_text = f"{db_type.lower()}|{schema_id}|{natural_query}"
 
     record = {
-        "_id": await generate_id(combined_text),
-        "chunk_text": combined_text,
-        "sql": sql_query
+        "_id": await generate_id(id_text),
+        "chunk_text": f"Query: {natural_query}",
+        "sql": sql_query,
+        "db_type": db_type.lower(),
+        "schema_id": schema_id,
+        "tables": tables,
+        "columns": columns,
     }
 
     index.upsert_records(namespace="sql-namespace", records=[record])
     print(f"[PINECONE] Сохранено: {natural_query} → {sql_query}")
 
 
-async def find_sql_in_pinecone(natural_query: str, schema: dict, db_type: str, top_k=5) -> str | None:
-    schema_string = normalize_schema(schema)
-    combined_text = f"DB_TYPE: {db_type.upper()}\nQuery: {natural_query}\nSchema:\n{schema_string}"
+async def find_sql_in_pinecone(natural_query: str, schema: dict, db_type: str, top_k: int = 5) -> str | None:
+    tables = sorted(schema.get("tables", {}).keys())
+    columns = sorted(
+        f"{tbl}.{col_name}".lower()
+        for tbl, cols in schema.get("tables", {}).items()
+        for col in cols
+        for col_name in col.keys()
+        )
 
-    # By same id
-    query_id = await generate_id(combined_text)
+    schema_id = calc_schema_id(tables, columns)
+    id_text = f"{db_type.lower()}|{schema_id}|{natural_query}"
+    query_id = await generate_id(id_text)
+
+    # by same id
     by_id = index.fetch(ids=[query_id], namespace="sql-namespace")
-
     if by_id and by_id.vectors and query_id in by_id.vectors:
         vector_data = by_id.vectors[query_id]
-        metadata = vector_data.metadata or {}
-        sql = metadata.get("sql") if isinstance(metadata, dict) else None
-        if sql:
-            print("[PINECONE] Точное совпадение по ID найдено.")
-            return sql
+        meta = vector_data.metadata or {}
+        if meta.get("db_type") == db_type.lower():
+            sql = meta.get("sql")
+            if sql:
+                print("[PINECONE] Точное совпадение по ID найдено.")
+                return sql
+
+    filter_cond = {
+        "db_type": {"$eq": db_type.lower()},
+        "schema_id": {"$eq": schema_id}
+    }
 
     # rerank
     response = index.search(
         namespace="sql-namespace",
         query={
             "top_k": top_k,
-            "inputs": {
-                "text": combined_text
-            }
+            "inputs": {"text": natural_query},
+            "filter": filter_cond,
         },
         rerank={
             "model": "bge-reranker-v2-m3",
             "top_n": top_k,
-            "rank_fields": ["chunk_text"]
-        }
+            "rank_fields": ["chunk_text"],
+        },
     )
 
-    if response and "result" in response and "hits" in response["result"]:
-        hits = response["result"]["hits"]
-        if not hits:
-            return None
+    if not response or "result" not in response or not response["result"]["hits"]:
+        return None
 
-        filtered_hits = [
-            hit for hit in hits
-            if f"DB_TYPE: {db_type.upper()}" in hit["fields"].get("chunk_text", "")
-        ]
+    best_hit = max(response["result"]["hits"], key=lambda h: h["_score"])
+    if best_hit["_score"] < 0.92:
+        return None
 
-        if not filtered_hits:
-            print("[PINECONE] Нет подходящих SQL по текущей СУБД")
-            return None
-
-        best_hit = max(filtered_hits, key=lambda x: x["_score"])
-        best_sql = best_hit["fields"]["sql"]
-        best_score = best_hit["_score"]
-
-        if best_score < 0.90:
-            print(best_score)
-            return None
-
-        print(f"Найден лучший SQL (score: {best_score}) → {best_sql}")
-        return best_sql
-
-    return None
+    best_sql = best_hit["fields"]["sql"]
+    print(f"[PINECONE] Найден SQL (score {best_hit['_score']}) → {best_sql}")
+    return best_sql
 
 
 async def add_message_to_chat_history(db_id: int, data: ChatRequest, sender: str) -> Chat | None:
@@ -190,34 +191,28 @@ async def sql_generation(chat: ChatRequest, db_name: str, token: str) -> dict:
         return {"sql": similar_sql, "schema": result}
 
     client = AsyncClient()
-    prompt = f""" You are an advanced SQL generation system. Given a user instruction, database schema, and target 
-    SQL dialect, your job is to generate a single-line, syntactically valid, and logically correct SQL query that 
-    **strictly matches the user's task**. 
+    prompt = f"""
+    You are an SQL-query generator.
 
-    ### Task:
-    {chat.content}
+    Task: {chat.content}
 
-    ### Database Schema:
-    {schema}
+    Schema (JSON): {schema}
 
-    ### SQL Dialect:
-    {db_type.upper()}
+    Dialect: {db_type.upper()}
 
-    ### Guidelines:
-    - Output only a **single-line raw SQL query**, with **no comments, no line breaks, and no extra text**.
-    - Use only **tables and columns that appear in the schema**. Do not invent anything.
-    - **Do not add filters, aggregations, or conditions** unless they are **explicitly stated** in the task.
-    - Use **explicit JOINs** (no NATURAL joins).
-    - Apply SQL syntax **specific to the dialect** ({db_type.upper()}) when needed: - PostgreSQL → `EXTRACT(YEAR FROM 
-    date_column)` or `CURRENT_DATE - INTERVAL '2 years'` - MySQL → `YEAR(date_column)` or `DATE_SUB(CURDATE(), 
-    INTERVAL 2 YEAR)` - SQLite → `strftime('%Y', date_column)` - SQL Server → `YEAR(date_column)` or `GETDATE()` - 
-    Use standard SQL functions like `COUNT(DISTINCT ...)`, `COALESCE(...)`, `EXISTS(...)`, `CASE WHEN ... THEN ... 
-    END` when the task requires them. - Be conservative: if the task is ambiguous, prefer the **most general and safe 
-    interpretation** without making up constraints. - Never use markdown, code blocks, or escape sequences. 
+    Rules:
+    1. Return exactly ONE line with raw SQL. No line breaks, no comments, no text around it.
+    2. Use only tables / columns that exist in the schema.
+    3. Add joins or conditions ONLY if they are stated in the task.
+    4. Follow the syntax of the target dialect.
 
-    ### Final Output:
-    Return only the raw SQL query as one line.
-    """
+    Example:
+    Task → Get all names from table users
+    Schema → {{ "users": [{{"id":"int"}}, {{"Namee":"text"}}] }}
+    Answer → SELECT Namee FROM users;
+
+    Now answer for the Task above.
+    """.strip()
 
     sql_query = None
 
@@ -226,10 +221,11 @@ async def sql_generation(chat: ChatRequest, db_name: str, token: str) -> dict:
 
         response = await client.chat.completions.create(
             model="gpt-4o-mini",
+            temperature=0.2,
             messages=[
-                {
-                    "role": "user", "content": prompt
-                }
+                {"role": "system",
+                 "content": "You are a strict SQL generator. Answer with a single-line SQL query only."},
+                {"role": "user", "content": prompt}
             ],
             web_search=False
         )
